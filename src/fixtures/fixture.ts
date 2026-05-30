@@ -2,7 +2,6 @@ import { clamp } from 'lodash';
 import type { Universe } from '../universe';
 import { FixtureDefinition } from './types';
 
-
 export type OnChange = (channelIndex: number, value: number) => void;
 
 export interface FixturePrivate {
