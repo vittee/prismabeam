@@ -1,0 +1,41 @@
+{
+  "name": "prismabeam",
+  "main": "src/index.ts",
+  "private": true,
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node src/poc-dmx.ts",
+    "postinstall": "node scripts/postinstall.mjs"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@seamless-medley/medley": "^0.5.4",
+    "@serialport/bindings-cpp": "^13.0.1",
+    "@tensorflow/tfjs-backend-wasm": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "essentia.js": "^0.1.3",
+    "koffi": "^3.0.1",
+    "lodash": "^4.18.1",
+    "serialport": "^13.0.0",
+    "ts-node": "^10.9.2",
+    "type-fest": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^25.9.1",
+    "tiny-typed-emitter": "^2.1.0"
+  },
+  "pnpm": {
+    "allowedDeprecatedVersions": {
+      "are-we-there-yet": "*",
+      "npmlog": "*",
+      "gauge": "*",
+      "glob": "*",
+      "inflight": "*",
+      "rimraf": "*",
+      "tar": "*"      
+    }
+  }
+}

@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@serialport/bindings-cpp'
+  - '@tensorflow/tfjs-node'
+  - core-js
+  - koffi
