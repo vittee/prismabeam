@@ -1,17 +1,16 @@
 import { Medley, Queue } from '@seamless-medley/medley';
-import { AnalysisManager } from './analysis/analysis-manager';
-
 import { SerialPort } from 'serialport';
+import { random } from 'lodash';
+
 import { DMX } from './transport/dmx';
 import { Universe } from './universe';
 import { Fixture } from './fixtures/fixture';
 import { YUERGenericBeamSpot } from './fixtures/moving-head/yeur';
-import { TADAMK54Rgb } from './fixtures/par/tadamk54';
-import { EnergyDetector } from './analysis/energy-detector';
 import { Mini30WMovingHeadPrismGoboWithLaser } from './fixtures/moving-head/mini';
+import { TADAMK54Rgb } from './fixtures/par/tadamk54';
+import { AnalysisManager } from './analysis/analysis-manager';
+import { EnergyDetector } from './analysis/energy-detector';
 import { Animator } from './animator';
-import { Animation } from './fixtures/animation';
-import { random } from 'lodash';
 
 process.on('uncaughtException', e => console.error('uncaughtException', e));
 process.on('unhandledRejection', e => console.error('unhandledRejection', e));
