@@ -1,19 +1,25 @@
 import { SerialPort } from 'serialport';
-import { SetOptions } from '@serialport/bindings-cpp';
 import koffi from 'koffi';
-import { DMXTransport } from './types';
+import type { DMXTransport } from './types';
 
 const sendBreak = (() => {
-  if (process.platform !== 'win32') {
-    return (handle: number, status: boolean) => {};
+  if (process.platform === 'win32') {
+    const kernel32 = koffi.load('kernel32.dll');
+    const EscapeCommFunction = kernel32.func('bool __stdcall EscapeCommFunction(intptr hFile, uint32 dwFunc)');
+    const SETBREAK = 8;
+    const CLRBREAK = 9;
+    return (handle: number, status: boolean) => EscapeCommFunction(handle, status ? SETBREAK : CLRBREAK);
   }
 
-  const kernel32 = koffi.load('kernel32.dll');
-  const EscapeCommFunction = kernel32.func('bool __stdcall EscapeCommFunction(intptr hFile, uint32 dwFunc)');
-  const SETBREAK = 8;
-  const CLRBREAK = 9;
+  if (process.platform === 'linux') {
+    const libc = koffi.load('libc.so.6');
+    const ioctl = libc.func('int ioctl(int fd, uint32 request, ...)');
+    const TIOCSBRK = 0x5427;
+    const TIOCCBRK = 0x5428;
+    return (handle: number, status: boolean) => ioctl(handle, status ? TIOCSBRK : TIOCCBRK);
+  }
 
-  return (handle: number, status: boolean) => EscapeCommFunction(handle, status ? SETBREAK : CLRBREAK);
+  return (_handle: number, _status: boolean) => {};
 })();
 
 export class DMX implements DMXTransport {
@@ -43,8 +49,8 @@ export class DMX implements DMXTransport {
       this.#dev.open((err) => {
         if (err) return reject(err);
 
-        if (process.platform === 'win32') {
-          this.#handle = (this.#dev as any).port.fd;
+        if (process.platform === 'win32' || process.platform === 'linux') {
+          this.#handle = (this.#dev as any)?.port?.fd;
         }
 
         setInterval(() => this.#sendFrame(), 1000 / this.frequency);
@@ -53,28 +59,11 @@ export class DMX implements DMXTransport {
     });
   }
 
-  #setFlag(options: SetOptions) {
-    return new Promise<void>((resolve, reject) => {
-      this.#dev.set(options, (e) => {
-        if (e) {
-          reject(e);
-          return;
-        }
-
-        resolve();
-      })
-    })
+  #sendBreak(status: boolean) {
+    sendBreak(this.#handle, status);
   }
 
-  async #sendBreak(status: boolean) {
-    if (process.platform === 'win32') {
-      sendBreak(this.#handle, status);
-    } else {
-      await this.#setFlag({ brk: status, rts: true, dtr: true });
-    }
-  }
-
-  async #sendFrame() {
+  #sendFrame() {
     this.#sendBreak(true);
     this.#sendBreak(false);
     this.#dev.write(this.#frame);

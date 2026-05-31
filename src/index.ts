@@ -20,11 +20,19 @@ const usbDevices = [
 ];
 
 async function main() {
-  const devices = await SerialPort.binding.list().then(all =>
-    all.filter(({ vendorId, productId }) =>
+  const devices = await SerialPort.binding.list().then(all => {
+    const matches = all.filter(({ vendorId, productId }) =>
       usbDevices.find(u => u.vendorId === vendorId && u.productId === productId)
-    )
-  );
+    );
+
+    if (matches.length) {
+      return matches;
+    }
+
+    const firstUSB = all.find(d => d.path.startsWith('/dev/ttyUSB'));
+
+    return firstUSB ? [firstUSB] : [];
+  });
 
   const device = devices.at(0);
   if (!device) {
@@ -85,9 +93,9 @@ async function main() {
     parLight: par
   });
 
-  mlStream.stream.on('data', (data: Buffer) => analysis.processMl(data));
+  mlStream.stream.on('data', data => analysis.processMl(data));
 
-  rhythmStream.stream.on('data', (data: Buffer) => {
+  rhythmStream.stream.on('data', (data) => {
     analysis.processRhythm(data);
     energyDetector.process(data);
   });
