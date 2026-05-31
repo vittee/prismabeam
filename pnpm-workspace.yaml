@@ -1,3 +1,9 @@
+allowBuilds:
+  '@serialport/bindings-cpp': true
+  '@tensorflow/tfjs-node': true
+  core-js: true
+  koffi: true
+
 onlyBuiltDependencies:
   - '@serialport/bindings-cpp'
   - '@tensorflow/tfjs-node'
