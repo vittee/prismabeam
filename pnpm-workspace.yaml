@@ -9,3 +9,12 @@ onlyBuiltDependencies:
   - '@tensorflow/tfjs-node'
   - core-js
   - koffi
+
+allowedDeprecatedVersions:
+  are-we-there-yet: "*"
+  npmlog: "*"
+  gauge: "*"
+  glob: "*"
+  inflight: "*"
+  rimraf: "*"
+  tar: "*"

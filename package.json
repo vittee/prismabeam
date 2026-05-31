@@ -26,16 +26,5 @@
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.9.1",
     "tiny-typed-emitter": "^2.1.0"
-  },
-  "pnpm": {
-    "allowedDeprecatedVersions": {
-      "are-we-there-yet": "*",
-      "npmlog": "*",
-      "gauge": "*",
-      "glob": "*",
-      "inflight": "*",
-      "rimraf": "*",
-      "tar": "*"      
-    }
   }
 }
