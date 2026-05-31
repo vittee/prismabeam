@@ -179,4 +179,4 @@ Rotate the mini head base 180° so its tilt = 0 also points toward the back wall
 ### Laser — mini head only
 
 > [!WARNING]
-> The mini head (Mini 30W Moving Head Prism Gobo With Laser) emits scattered green laser beams across a wide angle. Scattered laser light can cause permanent eye damage even at indirect exposure. The laser only activates during brief strobe bursts.**
+> The mini head (Mini 30W Moving Head Prism Gobo With Laser) emits scattered green laser beams across a wide angle. Scattered laser light can cause permanent eye damage even at indirect exposure. The laser only activates during brief strobe bursts.
