@@ -28,7 +28,7 @@ export class Animator {
   #strobingWeight = 0;
 
   #profileName = '';
-  #profile = ProfileConfigs['default'];
+  #profile = ProfileConfigs['idle'];
   #variants: Profile['variants'] = {
     par: [],
     head: [],
@@ -77,7 +77,7 @@ export class Animator {
     }
 
     this.bpm = 120;
-    this.#applyProfile(ProfileConfigs['default']);
+    this.#applyProfile(ProfileConfigs['idle']);
 
     // start beating
     this.#heartbeat();
