@@ -4,7 +4,7 @@ import { Animation } from "./fixtures/animation";
 import { Fixture } from "./fixtures/fixture";
 import { easeInExpo, easeInOutSine } from "./utils/easing";
 import { ProfileConfigs } from "./profiles/configs";
-import { Profile } from "./profiles/types";
+import { MiniVariant, Profile } from "./profiles/types";
 import { GroupTagToProfileMap, TagsToProfileMap } from "./profiles/mapping";
 
 export type AnimatorOptions = {
@@ -42,6 +42,8 @@ export class Animator {
 
   #parColorAnim: Animation;
   #headMoveAnim: Record<'main' | 'mini', Animation>;
+
+  #miniVariant?: MiniVariant;
 
   constructor(opts: AnimatorOptions) {
     this.#movingHead = opts.movingHead;
@@ -129,8 +131,15 @@ export class Animator {
       .add({ push: ['laser'] })
       .add({
         to: [
-          ['laser', () => this.#strobing && chance(1.8) ? 80 : 0]
           ['strobe', () => this.#strobing && chance(1.5) ? 240 + (15 * this.#pace) : 0],
+          ['laser',
+            () => (
+              (this.#miniVariant?.starfield ?? false) ||
+              (this.#strobing && (this.#energy >= 0.7 || chance(1.8)))
+                ? this.#miniVariant?.laser ?? 80
+                : 0
+            )
+          ]
         ],
         duration: stepDuration,
         easing: noEase
@@ -234,6 +243,8 @@ export class Animator {
 
     const miniVariant = this.#variants.mini.shift();
 
+    this.#miniVariant = miniVariant;
+
     if (miniVariant) {
       this.#variants.mini.push(miniVariant);
     }
@@ -269,7 +280,7 @@ export class Animator {
         this.#movingHead.mini
           .set('beam', miniVariant.beam)
           .set('gobo', miniVariant.gobo ? miniVariant.beam * 0.3 : 0)
-          // .set('laser', miniVariant.starfield ? miniVariant.laser : 0)
+          .set('laser', miniVariant?.starfield ? miniVariant.laser : 0)
           .set('led-ring', sample(miniVariant.ledRing) ?? random(10, 230))
       }
 
