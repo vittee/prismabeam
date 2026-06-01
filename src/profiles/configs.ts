@@ -1438,5 +1438,39 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
     },
+  },
+
+  idle: {
+    luminous: {
+      head: 20,
+      mini: 20,
+      par: 20
+    },
+    variants: {
+      head: [
+        {
+          colors: [112],
+          gobo: 0,
+          ledRing: [70],
+          moves: []
+        }
+      ],
+      mini: [
+        {
+          beam: 255,
+          laser: 0,
+          ledRing: [40]
+        }
+      ],
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 0, 0], duration: 500 },
+            { rgbw: [0, 255, 0], duration: 500 },
+            { rgbw: [0, 0, 255], duration: 500 },
+          ]
+        }
+      ]
+    }
   }
 }
