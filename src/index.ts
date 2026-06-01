@@ -1,6 +1,5 @@
-import { Medley, Queue } from '@seamless-medley/medley';
+import dgram from 'dgram';
 import { SerialPort } from 'serialport';
-import { random } from 'lodash';
 
 import { DMX } from './transport/dmx';
 import { Universe } from './universe';
@@ -42,30 +41,6 @@ async function main() {
 
   console.log('Found device:', device.path);
 
-  const tracks = [
-    'test1.mp3',
-    'test2.mp3',
-    'test3.mp3',
-    'test4.flac',
-    'test5.mp3'
-  ];
-
-  let index = random(tracks.length);
-  // let index = 0;
-
-  const q = new Queue();
-  const m = new Medley(q);
-
-  const mlStream = await m.requestAudioStream({ format: 'FloatLE', sampleRate: 16000 });
-  const rhythmStream = await m.requestAudioStream({ format: 'FloatLE', sampleRate: 44100 });
-
-  m.on('enqueueNext', (done) => {
-    const track = tracks[index];
-    index = (index + 1) % tracks.length;
-    q.add(track);
-    done(true);
-  });
-
   const dmx = new DMX(device.path);
   const universe = new Universe(dmx);
 
@@ -83,7 +58,7 @@ async function main() {
   const analysis = new AnalysisManager('file://./model-tfjs/model.json');
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
 
-  const energyDetector = new EnergyDetector(44100);
+  const energyDetector = new EnergyDetector(48000);
 
   const animator = new Animator({
     movingHead: {
@@ -93,12 +68,27 @@ async function main() {
     parLight: par
   });
 
-  mlStream.stream.on('data', data => analysis.processMl(data));
+  const taggingSocket = dgram.createSocket('udp4');
+  const audioSocket = dgram.createSocket('udp4');
 
-  rhythmStream.stream.on('data', (data) => {
+  taggingSocket.on('message', (data) =>{
+    analysis.processMl(data)
+  });
+
+  audioSocket.on('message', (data) => {
     analysis.processRhythm(data);
     energyDetector.process(data);
   });
+
+  const taggingPort = +(process.env.TAGGING_PORT || 7440);
+  const audioPort = +(process.env.AUDIO_PORT || 7441);
+
+  await Promise.all([
+    new Promise<void>(resolve => taggingSocket.bind(taggingPort, resolve)),
+    new Promise<void>(resolve => audioSocket.bind(audioPort, resolve))
+  ]);
+
+  console.log(`Listening — audio:${audioPort} audio-tagging:${taggingPort}`);
 
   analysis.on('extracted', ([topTag]) => {
     if (topTag?.score) {
@@ -107,25 +97,20 @@ async function main() {
   });
 
   analysis.on('bpm', (bpm) => {
+    console.log('BPM', bpm);
     animator.bpm = bpm;
   });
 
   analysis.on('danceability', (value) => {
+    console.log('Danceability', value);
     animator.dancability = value;
   });
 
-  let lastEnergyLog = 0;
   energyDetector.on('energy', (level) => {
-    const now = Date.now();
-    if (now - lastEnergyLog >= 1000) {
-      lastEnergyLog = now;
-    }
     animator.energy = level;
   });
 
   energyDetector.on('kick', () => { animator.kick(); });
-
-  m.play();
 }
 
 main();
