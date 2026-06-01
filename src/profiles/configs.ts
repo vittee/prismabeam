@@ -6,6 +6,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Head sweeps wide arcs with sine easing. Gobo spinning, prism on, color wheel mid-range.
   electronic: {
     luminous: { head: 255, mini: 255, par: 200 },
+    strobing: { threshold: 0.15, paceWeight: 0.35, energyWeight: 0.65, danceExp: 0.8 },
     variants: {
       par: [
         // Cyan→magenta→blue→teal PAR.
@@ -83,6 +84,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Prism on. Aggressive feel.
   rock: {
     luminous: { head: 255, mini: 255, par: 200 },
+    strobing: { threshold: 0.18, paceWeight: 0.4, energyWeight: 0.6, danceExp: 0.9 },
     variants: {
       par: [
         // Red flash with white pop PAR.
@@ -159,6 +161,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Prism on, gobo patterns. Energetic but not aggressive.
   pop: {
     luminous: { head: 200, mini: 240, par: 180 },
+    strobing: { threshold: 0.25, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
     variants: {
       par: [
         // Hot pink→yellow→sky→purple PAR.
@@ -235,6 +238,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // No prism, minimal gobo. Intimate club feel.
   jazz: {
     luminous: { head: 150, mini: 200, par: 140 },
+    strobing: { threshold: 0.5, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.5 },
     variants: {
       par: [
         // Deep amber→burnt orange→warm orange PAR.
@@ -310,6 +314,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Melancholic, smoky bar atmosphere.
   blues: {
     luminous: { head: 150, mini: 200, par: 140 },
+    strobing: { threshold: 0.5, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.5 },
     variants: {
       par: [
         // Navy→purple→steel blue PAR.
@@ -384,6 +389,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Gobo spinning, prism on. Trap/rap club energy.
   'hip hop': {
     luminous: { head: 220, mini: 255, par: 190 },
+    strobing: { threshold: 0.2, paceWeight: 0.35, energyWeight: 0.65, danceExp: 1.0 },
     variants: {
       par: [
         // Purple→green→dark PAR.
@@ -457,6 +463,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Gentle sine head, minimal gobo, slight prism.
   reggae: {
     luminous: { head: 200, mini: 240, par: 170 },
+    strobing: { threshold: 0.45, paceWeight: 0.25, energyWeight: 0.75, danceExp: 1.2 },
     variants: {
       par: [
         // Red→gold→green PAR.
@@ -532,6 +539,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Gobo spinning, prism on. Fiesta energy.
   latin: {
     luminous: { head: 220, mini: 255, par: 190 },
+    strobing: { threshold: 0.22, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
     variants: {
       par: [
         // Orange→pink→gold PAR.
@@ -605,6 +613,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Light prism on some variants. Groove-driven, warm.
   'funk / soul': {
     luminous: { head: 200, mini: 240, par: 170 },
+    strobing: { threshold: 0.3, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
     variants: {
       par: [
         // Orange→crimson→gold PAR. Light prism.
@@ -678,6 +687,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // No prism, minimal gobo. Acoustic, pastoral feel.
   'folk, world, & country': {
     luminous: { head: 160, mini: 210, par: 140 },
+    strobing: { threshold: 0.6, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.5 },
     variants: {
       par: [
         // Amber→sage PAR.
@@ -751,6 +761,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Extremely slow 5s head moves. No gobo, no prism. Concert hall atmosphere.
   classical: {
     luminous: { head: 180, mini: 220, par: 150 },
+    strobing: { threshold: 0.8, paceWeight: 0.1, energyWeight: 0.9, danceExp: 2.0 },
     variants: {
       par: [
         // Warm white→cool white PAR with white additive.
@@ -824,6 +835,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // 4s slow head, minimal gobo, slight prism on one variant. Broadway/film score feel.
   'stage & screen': {
     luminous: { head: 200, mini: 230, par: 160 },
+    strobing: { threshold: 0.7, paceWeight: 0.15, energyWeight: 0.85, danceExp: 1.8 },
     variants: {
       par: [
         // Warm peach→cool periwinkle PAR with white. Slight prism.
@@ -898,6 +910,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Prism always on, fast gobo spin. 4-on-the-floor club energy distinct from general Electronic.
   'house / techno / trance': {
     luminous: { head: 255, mini: 255, par: 200 },
+    strobing: { threshold: 0.12, paceWeight: 0.4, energyWeight: 0.6, danceExp: 0.7 },
     variants: {
       par: [
         // Cyan→white→blue→deep blue PAR.
@@ -974,6 +987,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // No prism, no gobo. Meditative, dark, near-silence visual.
   'ambient / drone': {
     luminous: { head: 60, mini: 80, par: 40 },
+    strobing: { threshold: 0.95, paceWeight: 0.1, energyWeight: 0.9, danceExp: 2.5 },
     variants: {
       par: [
         // Near-black→deep teal→black PAR.
@@ -1027,6 +1041,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Light prism on some variants. Smooth, sensual, late-night feel.
   'r&b / soul': {
     luminous: { head: 190, mini: 230, par: 160 },
+    strobing: { threshold: 0.35, paceWeight: 0.25, energyWeight: 0.75, danceExp: 1.2 },
     variants: {
       par: [
         // Deep rose→mauve→coral PAR. Light prism.
@@ -1100,6 +1115,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Extreme expo head snaps to very wide pan. No prism on most variants. Brutal, relentless energy.
   metal: {
     luminous: { head: 255, mini: 255, par: 200 },
+    strobing: { threshold: 0.12, paceWeight: 0.45, energyWeight: 0.55, danceExp: 0.7 },
     variants: {
       par: [
         // Blood red→black→dark red PAR.
@@ -1197,6 +1213,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Smooth two/three-point head. Light gobo, no prism. Nashville honky-tonk warmth.
   country: {
     luminous: { head: 200, mini: 230, par: 170 },
+    strobing: { threshold: 0.45, paceWeight: 0.25, energyWeight: 0.75, danceExp: 1.2 },
     variants: {
       par: [
         // Gold→warm white→amber PAR.
@@ -1273,6 +1290,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // PAR cycles at 250-400ms. Playful expo/sine head mix. Prism on, fast gobo.
   'k-pop / j-pop': {
     luminous: { head: 240, mini: 255, par: 195 },
+    strobing: { threshold: 0.18, paceWeight: 0.3, energyWeight: 0.7, danceExp: 0.9 },
     variants: {
       par: [
         // Hot pink→mint→yellow→sky PAR.
@@ -1369,6 +1387,7 @@ export const ProfileConfigs: Record<string, Profile> = {
   // Medium neutral, moderate motor. Versatile fallback — colour variety, active sweeps, light gobo/prism.
   default: {
     luminous: { head: 190, mini: 230, par: 165 },
+    strobing: { threshold: 0.2, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
     variants: {
       par: [
         // Periwinkle→dusty rose→gold PAR.
@@ -1446,6 +1465,7 @@ export const ProfileConfigs: Record<string, Profile> = {
       mini: 20,
       par: 20
     },
+    strobing: { threshold: 0.99 },
     variants: {
       head: [
         {

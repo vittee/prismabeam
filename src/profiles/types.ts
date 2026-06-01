@@ -28,8 +28,16 @@ export type MiniVariant = {
   ledRing: number[];
 }
 
+export type StrobingConfig = {
+  threshold?: number;    // min weight to trigger strobing, default 0.3
+  paceWeight?: number;   // BPM contribution (0–1), default 0.4
+  energyWeight?: number; // energy contribution (0–1), default 0.6
+  danceExp?: number;     // exponent on danceability gate, default 2
+}
+
 export type Profile = {
   luminous: Record<'head' | 'mini' | 'par', number>;
+  strobing?: StrobingConfig;
   variants: {
     par: ParVariant[];
     head: HeadVariant[];
