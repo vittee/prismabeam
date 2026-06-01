@@ -4,7 +4,7 @@ import { easeInExpo, easeInOutSine, easeInSine } from "../utils/easing";
 export const ProfileConfigs: Record<string, Profile> = {
 // Full brightness, fast motor. Aggressive cyan/magenta/blue cycling at 300ms steps.
   // Head sweeps wide arcs with sine easing. Gobo spinning, prism on, color wheel mid-range.
-  Electronic: {
+  electronic: {
     luminous: { head: 255, mini: 255, par: 200 },
     variants: {
       par: [
@@ -81,7 +81,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Max brightness, very fast motor. Short-duration red/white PAR bursts. Snappy expo head snaps.
   // Prism on. Aggressive feel.
-  Rock: {
+  rock: {
     luminous: { head: 255, mini: 255, par: 200 },
     variants: {
       par: [
@@ -157,7 +157,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium brightness, moderate motor. Bright candy-color PAR at 600ms steps. Smooth sine head.
   // Prism on, gobo patterns. Energetic but not aggressive.
-  Pop: {
+  pop: {
     luminous: { head: 200, mini: 240, par: 180 },
     variants: {
       par: [
@@ -233,7 +233,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Dim warm glow, very slow motor. Amber/orange PAR with long 2s transitions. Slow sine head.
   // No prism, minimal gobo. Intimate club feel.
-  Jazz: {
+  jazz: {
     luminous: { head: 150, mini: 200, par: 140 },
     variants: {
       par: [
@@ -308,7 +308,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Dim blue/indigo tones, very slow motor. Cool blue→purple PAR with 2s steps. No prism.
   // Melancholic, smoky bar atmosphere.
-  Blues: {
+  blues: {
     luminous: { head: 150, mini: 200, par: 140 },
     variants: {
       par: [
@@ -382,7 +382,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Bright, punchy. Purple/green/dark PAR at 400ms with dark rest beat. Fast expo head snaps.
   // Gobo spinning, prism on. Trap/rap club energy.
-  'Hip Hop': {
+  'hip hop': {
     luminous: { head: 220, mini: 255, par: 190 },
     variants: {
       par: [
@@ -455,7 +455,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium brightness, slow motor. Red/yellow/green (Rastafarian palette) PAR at 800ms.
   // Gentle sine head, minimal gobo, slight prism.
-  Reggae: {
+  reggae: {
     luminous: { head: 200, mini: 240, par: 170 },
     variants: {
       par: [
@@ -530,7 +530,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Bright warm, medium motor. Warm orange/pink/gold PAR at 500ms. Smooth two/three-point head.
   // Gobo spinning, prism on. Fiesta energy.
-  Latin: {
+  latin: {
     luminous: { head: 220, mini: 255, par: 190 },
     variants: {
       par: [
@@ -603,7 +603,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium brightness, medium-slow motor. Orange/magenta/gold PAR at 800ms. Smooth three-point head.
   // Light prism on some variants. Groove-driven, warm.
-  'Funk / Soul': {
+  'funk / soul': {
     luminous: { head: 200, mini: 240, par: 170 },
     variants: {
       par: [
@@ -676,7 +676,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Dim earthy tones, very slow motor. Warm amber/sage PAR with long 2.5s transitions.
   // No prism, minimal gobo. Acoustic, pastoral feel.
-  'Folk, World, & Country': {
+  'folk, world, & country': {
     luminous: { head: 160, mini: 210, par: 140 },
     variants: {
       par: [
@@ -749,7 +749,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Soft warm white with cool blue accent, very slow motor. White-wash PAR with white additive (w channel).
   // Extremely slow 5s head moves. No gobo, no prism. Concert hall atmosphere.
-  Classical: {
+  classical: {
     luminous: { head: 180, mini: 220, par: 150 },
     variants: {
       par: [
@@ -822,7 +822,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium bright warm theatrical tones, very slow motor. Warm peach/periwinkle PAR with white additive.
   // 4s slow head, minimal gobo, slight prism on one variant. Broadway/film score feel.
-  'Stage & Screen': {
+  'stage & screen': {
     luminous: { head: 200, mini: 230, par: 160 },
     variants: {
       par: [
@@ -896,7 +896,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Max brightness, fast motor. Deep blue/cyan/white rapid 200ms cycling. Aggressive expo snaps.
   // Prism always on, fast gobo spin. 4-on-the-floor club energy distinct from general Electronic.
-  'House / Techno / Trance': {
+  'house / techno / trance': {
     luminous: { head: 255, mini: 255, par: 200 },
     variants: {
       par: [
@@ -972,7 +972,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Very dim, near-static. Dark charcoal/deep teal/black PAR at 6–8s. Barely-moving head.
   // No prism, no gobo. Meditative, dark, near-silence visual.
-  'Ambient / Drone': {
+  'ambient / drone': {
     luminous: { head: 60, mini: 80, par: 40 },
     variants: {
       par: [
@@ -1025,7 +1025,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium-bright warm, slow motor. Deep rose/mauve/amber PAR at 1.5s. Gentle two/three-point head.
   // Light prism on some variants. Smooth, sensual, late-night feel.
-  'R&B / Soul': {
+  'r&b / soul': {
     luminous: { head: 190, mini: 230, par: 160 },
     variants: {
       par: [
@@ -1098,7 +1098,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Max brightness, very fast motor. Dark red/deep purple/near-black PAR at 150-250ms bursts.
   // Extreme expo head snaps to very wide pan. No prism on most variants. Brutal, relentless energy.
-  Metal: {
+  metal: {
     luminous: { head: 255, mini: 255, par: 200 },
     variants: {
       par: [
@@ -1195,7 +1195,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium-bright warm golden tones, moderate motor. Gold/amber/warm white PAR at 700ms.
   // Smooth two/three-point head. Light gobo, no prism. Nashville honky-tonk warmth.
-  Country: {
+  country: {
     luminous: { head: 200, mini: 230, par: 170 },
     variants: {
       par: [
@@ -1271,7 +1271,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // High brightness, fast motor. Hyper-saturated neon pastels — hot pink/mint/yellow/sky.
   // PAR cycles at 250-400ms. Playful expo/sine head mix. Prism on, fast gobo.
-  'K-Pop / J-Pop': {
+  'k-pop / j-pop': {
     luminous: { head: 240, mini: 255, par: 195 },
     variants: {
       par: [
