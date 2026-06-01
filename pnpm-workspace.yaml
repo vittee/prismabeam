@@ -4,17 +4,17 @@ allowBuilds:
   core-js: true
   koffi: true
 
+allowedDeprecatedVersions:
+  are-we-there-yet: "*"
+  gauge: "*"
+  glob: "*"
+  inflight: "*"
+  npmlog: "*"
+  rimraf: "*"
+  tar: "*"
+
 onlyBuiltDependencies:
   - '@serialport/bindings-cpp'
   - '@tensorflow/tfjs-node'
   - core-js
   - koffi
-
-allowedDeprecatedVersions:
-  are-we-there-yet: "*"
-  npmlog: "*"
-  gauge: "*"
-  glob: "*"
-  inflight: "*"
-  rimraf: "*"
-  tar: "*"
