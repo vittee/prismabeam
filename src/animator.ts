@@ -453,12 +453,12 @@ export class Animator {
   }
 
   #heartbeat() {
-    // try {
-    //   this.#doHeartbeatTasks();
-    // }
-    // finally {
-    //   setTimeout(() => this.#heartbeat(), 1000 / 120); // 120 Hz
-    // }
+    try {
+      this.#doHeartbeatTasks();
+    }
+    finally {
+      setTimeout(() => this.#heartbeat(), 1000 / 120); // 120 Hz
+    }
   }
 
   #doHeartbeatTasks() {
