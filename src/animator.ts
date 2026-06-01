@@ -26,6 +26,7 @@ export class Animator {
 
   #strobing = false;
   #strobingWeight = 0;
+  #lastStrobingCheck = 0;
 
   #profileName = '';
   #profile = ProfileConfigs['idle'];
@@ -128,8 +129,8 @@ export class Animator {
       .add({ push: ['laser'] })
       .add({
         to: [
-          ['strobe', () => this.#strobing && chance(1.5) ? 255 : 0],
           ['laser', () => this.#strobing && chance(1.8) ? 80 : 0]
+          ['strobe', () => this.#strobing && chance(1.5) ? 240 + (15 * this.#pace) : 0],
         ],
         duration: stepDuration,
         easing: noEase
@@ -406,8 +407,6 @@ export class Animator {
     this.#speedChanged();
 
     this.#updateFlashAnims();
-
-    this.#detectStrobing();
   }
 
   get energy() {
@@ -420,8 +419,6 @@ export class Animator {
     }
 
     this.#energy = value;
-
-    this.#detectStrobing();
   }
 
   get dancability() {
@@ -435,28 +432,20 @@ export class Animator {
 
     this.#dance = value;
     this.#speedChanged();
-
-    this.#detectStrobing();
   }
 
   #detectStrobing() {
-    const pace = Math.min(this.#pace, 2) / 2; // normalize: 120bpm=0.5, 240bpm=1.0
-    const weight = pace * this.#dance * this.#energy;
+    const { paceWeight = 0.3, energyWeight = 0.7, danceExp = 1.0, threshold = 0.2 } = this.#profile.strobing ?? {};
 
-    // Fast attack, slow decay — decay scaled by pace so 120 BPM ≈ 4-beat tail
-    const decayAlpha = 0.03 * this.#pace;
-    const alpha = weight > this.#strobingWeight ? 0.8 : decayAlpha;
+    const pace = clamp((this.#bpm - 95) / (150 - 95), 0, 1) * 0.5 + 0.5; // 95bpm=0.5, 150bpm=1.0
+    const energy2 = this.#bpm >= 105 ? this.#energy ** 3 : this.#energy * pace;
+    const weight = (paceWeight * pace + energyWeight * energy2) * this.#dance ** danceExp;
+
+    // Fast attack on spikes, ~1-bar (4-beat) decay
+    const alpha = weight > this.#strobingWeight ? Math.min(1, weight * 2) : 0.75;
     this.#strobingWeight = alpha * weight + (1 - alpha) * this.#strobingWeight;
 
-    this.#setStrobing(this.#strobingWeight >= 0.3);
-  }
-
-  #setStrobing(v: boolean) {
-    if (this.#strobing === v) {
-      return;
-    }
-
-    this.#strobing = v;
+    this.#strobing = this.#strobingWeight >= threshold;
   }
 
   #heartbeat() {
@@ -469,7 +458,11 @@ export class Animator {
   }
 
   #doHeartbeatTasks() {
-
+    const now = Date.now();
+    if (now - this.#lastStrobingCheck >= this.#beatInterval) {
+      this.#lastStrobingCheck = now;
+      this.#detectStrobing();
+    }
   }
 
   kick() {
