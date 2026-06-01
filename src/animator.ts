@@ -87,23 +87,23 @@ export class Animator {
     this.#lumiousAnim.main
       .add({
         to: [
-          ['luminous', () => this.#profile.luminous.head * (1.5 * this.#energy)]
+          ['luminous', () => this.#profile.luminous.head * (1 + 0.5 * this.#energy)]
         ],
         duration: 200,
         easing: easeInOutSine
       })
-      .delay(2000)
+      .delay(500)
       .start({ loop: true })
 
     this.#lumiousAnim.mini
       .add({
         to: [
-          ['luminous', () => this.#profile.luminous.head * (1.5 * this.#energy)]
+          ['luminous', () => this.#profile.luminous.mini * (1 + 0.5 * this.#energy)]
         ],
         duration: 200,
         easing: easeInOutSine
       })
-      .delay(2000)
+      .delay(500)
       .start({ loop: true })
   }
 
