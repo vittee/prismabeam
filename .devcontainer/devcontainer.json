@@ -5,13 +5,15 @@
   },
   "runArgs": [
     "--privileged",
-    "--device=/dev/ttyUSB0:/dev/ttyUSB0"
+    "--device=/dev/ttyUSB0:/dev/ttyUSB0",
+    "--publish=7440:7440/udp",
+    "--publish=7441:7441/udp"
   ],
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "pnpm install",
+  "postCreateCommand": "pnpm config set store-dir /home/node/.pnpm-store && pnpm install",
   "remoteUser": "node",
   "features": {},
   "customizations": {
