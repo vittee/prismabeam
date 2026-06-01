@@ -42,7 +42,7 @@ class FeatureExtractor extends TypedEmitter {
   /** @type {Float32Array[]} */ #hopData;
   /** @type {Float32Array[]} */ #frameData;
   /** @type {any} */ #extractor;
-  #activationSmoother = new ActivationSmoother();
+  #activationSmoother = new ActivationSmoother(8);
 
   #features = {
     melSpectrum: /** @type {number[][]} */ (Array(128).fill(Array(96).fill(0))),
