@@ -175,6 +175,8 @@ export class Animator {
 
     this.#variants.par.push(variant);
 
+    this.#parColorAnim.removeAllListeners();
+
     const since = Date.now();
 
     // Trigger next move
@@ -227,6 +229,8 @@ export class Animator {
 
     this.#variants.head.push(variant);
 
+    this.#headMoveAnim.main.removeAllListeners();
+
     const miniVariant = this.#variants.mini.shift();
 
     if (miniVariant) {
@@ -268,7 +272,10 @@ export class Animator {
           .set('led-ring', sample(miniVariant.ledRing) ?? random(10, 230))
       }
 
-      this.#headMoveAnim.main.clear();
+      this.#headMoveAnim.main
+        .clear()
+        .off('end', nextMove)
+
       this.#headMoveAnim.mini.clear();
 
       for (const { axis, duration, easing } of moves) {
