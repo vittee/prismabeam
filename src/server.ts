@@ -45,7 +45,7 @@ export function createWsServer(params: ParamStore, port: number) {
   };
 
   const getLuminousity = (name: keyof Params) => ({
-    luminosity: params.luminosity(name),
+    luminosity: params.getLuminosity(name),
     enabled: params.enabled(name)
   });
 

@@ -43,6 +43,10 @@ export class ParamStore extends TypedEmitter<ParamEvents> {
     return p.enabled ? p.luminosity : 0;
   }
 
+  getLuminosity(key: keyof Params) {
+    return this.#params[key].luminosity;
+  }
+
   enabled(key: keyof Params, newValue?: boolean) {
     const p = this.#params[key];
     if (newValue !== undefined) {
