@@ -1,3 +1,9 @@
+packages:
+  - .
+  - ui
+
+ignoreWorkspaceRootCheck: true
+
 allowBuilds:
   '@serialport/bindings-cpp': true
   '@tensorflow/tfjs-node': true
