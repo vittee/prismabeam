@@ -1472,7 +1472,9 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [112],
           gobo: 0,
           ledRing: [70],
-          moves: []
+          moves: [
+            { axis: [0, 90], duration: 100 }
+          ]
         }
       ],
       mini: [
