@@ -1461,9 +1461,9 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   idle: {
     luminous: {
-      head: 20,
-      mini: 20,
-      par: 20
+      head: 190,
+      mini: 230,
+      par: 165
     },
     strobing: { threshold: 0.99 },
     variants: {
