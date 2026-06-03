@@ -175,7 +175,6 @@
     height: 2em;
     border-radius: 0.125em;
     background: linear-gradient(to bottom, color-mix(in srgb, var(--color-black), black 33%) 0%, color-mix(in srgb, var(--color-black), black 20%) 50%, var(--color-shadow) 50%, var(--color-shadow) calc(50% + 1.5px), color-mix(in srgb, var(--color-black), black 20%) calc(50% + 1.5px));
-    box-shadow: 0 2px 6px 0 rgba(black, 0.5), 0 2px 2px 0 rgba(black, 0.3), 0 0 1px 0 rgba(white, 0.1) inset;
     filter: brightness(120%);
     transition: top 200ms cubic-bezier(0.785, 0.135, 0.15, 0.86);
   }
