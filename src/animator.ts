@@ -206,7 +206,7 @@ export class Animator {
     }
 
     const move = () => {
-      this.#parColorAnim.clear()
+      this.#parColorAnim.clear(false)
         .off('end', nextMove)
 
       for (const { rgbw, duration } of variant.colors) {
