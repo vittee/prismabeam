@@ -14,7 +14,6 @@
 
   let { value = $bindable(), min = 0, max = 1, normalValue = 0, precision = 0.1, onchange }: Props = $props();
 
-
   function valueFromY(y: number): number {
     const rect = el!.getBoundingClientRect();
     const ratio = 1 - (y - rect.top) / height;
@@ -35,7 +34,6 @@
   let marks = $derived(Array(count).fill(0).map((_, i) => i * precision + min));
 
   let el = $state<HTMLDivElement>();
-  let top = $derived.by(() => el?.clientTop ?? 0);
   let width = $derived.by(() => el?.clientWidth ?? 0);
   let height = $derived.by(() => el?.clientHeight ?? 0);
 
@@ -175,6 +173,7 @@
     height: 2em;
     border-radius: 0.125em;
     background: linear-gradient(to bottom, color-mix(in srgb, var(--color-black), black 33%) 0%, color-mix(in srgb, var(--color-black), black 20%) 50%, var(--color-shadow) 50%, var(--color-shadow) calc(50% + 1.5px), color-mix(in srgb, var(--color-black), black 20%) calc(50% + 1.5px));
+    box-shadow: 0 2px 6px 0 rgb(0 0 0 / 0.5), 0 2px 2px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgba(255 255 255 / 0.1) inset;
     filter: brightness(120%);
     transition: top 200ms cubic-bezier(0.785, 0.135, 0.15, 0.86);
   }
