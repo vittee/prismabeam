@@ -7,9 +7,6 @@
     "dev": "ts-node src/poc-dmx.ts",
     "postinstall": "node scripts/postinstall.mjs"
   },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
   "packageManager": "pnpm@10.34.1",
   "dependencies": {
     "@serialport/bindings-cpp": "^13.0.1",
@@ -20,11 +17,16 @@
     "lodash": "^4.18.1",
     "serialport": "^13.0.0",
     "ts-node": "^10.9.2",
-    "type-fest": "^5.6.0"
+    "ts-pattern": "^5.9.0",
+    "type-fest": "^5.6.0",
+    "ws": "^8.21.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.9.1",
-    "tiny-typed-emitter": "^2.1.0"
+    "@types/ws": "^8.18.1",
+    "tiny-typed-emitter": "^2.1.0",
+    "typescript": "5.9.3"
   }
 }

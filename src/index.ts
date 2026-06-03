@@ -10,6 +10,8 @@ import { TADAMK54Rgb } from './fixtures/par/tadamk54';
 import { AnalysisManager } from './analysis/analysis-manager';
 import { EnergyDetector } from './analysis/energy-detector';
 import { Animator } from './animator';
+import { ParamStore } from './params';
+import { createWsServer } from './server';
 
 process.on('uncaughtException', e => console.error('uncaughtException', e));
 process.on('unhandledRejection', e => console.error('unhandledRejection', e));
@@ -60,12 +62,16 @@ async function main() {
 
   const energyDetector = new EnergyDetector(48000);
 
+  const params = new ParamStore();
+  createWsServer(params, 7400);
+
   const animator = new Animator({
     movingHead: {
       main: beamSpot,
       mini: miniBeam
     },
-    parLight: par
+    parLight: par,
+    params
   });
 
   const taggingSocket = dgram.createSocket('udp4');

@@ -6,6 +6,7 @@ import { easeInExpo, easeInOutSine } from "./utils/easing";
 import { ProfileConfigs } from "./profiles/configs";
 import { MiniVariant, Profile } from "./profiles/types";
 import { GroupTagToProfileMap, TagsToProfileMap } from "./profiles/mapping";
+import { ParamStore } from "./params";
 
 export type AnimatorOptions = {
   movingHead: {
@@ -14,11 +15,13 @@ export type AnimatorOptions = {
   };
 
   parLight: Fixture;
+  params: ParamStore;
 }
 
 export class Animator {
   #movingHead: AnimatorOptions['movingHead'];
   #parLight: Fixture;
+  #params: ParamStore;
 
   #bpm = 60;
   #energy = 0.5;
@@ -36,7 +39,7 @@ export class Animator {
     mini: []
   }
 
-  #lumiousAnim: Record<'main' | 'mini', Animation>;
+  #lumiousAnim: Record<'main' | 'mini' | 'par', Animation>;
   #flashAnim: Record<'main' | 'mini' | 'par', Animation>;
   #strobeAnim: Record<'main' | 'mini' | 'par', Animation>;
 
@@ -48,10 +51,12 @@ export class Animator {
   constructor(opts: AnimatorOptions) {
     this.#movingHead = opts.movingHead;
     this.#parLight = opts.parLight;
+    this.#params = opts.params;
 
     this.#lumiousAnim = {
       main: new Animation(this.#movingHead.main),
-      mini: new Animation(this.#movingHead.mini)
+      mini: new Animation(this.#movingHead.mini),
+      par: new Animation(this.#parLight)
     }
 
     this.#setupLuminousAnim();
@@ -90,7 +95,7 @@ export class Animator {
     this.#lumiousAnim.main
       .add({
         to: [
-          ['luminous', () => this.#profile.luminous.head * (1 + 0.5 * this.#energy)]
+          ['luminous', () => this.#profile.luminous.head * (this.#params.luminosity('head') ** 2) * (1 + 0.5 * this.#energy)]
         ],
         duration: 200,
         easing: easeInOutSine
@@ -101,7 +106,7 @@ export class Animator {
     this.#lumiousAnim.mini
       .add({
         to: [
-          ['luminous', () => this.#profile.luminous.mini * (1 + 0.5 * this.#energy)]
+          ['luminous', () => this.#profile.luminous.mini * (this.#params.luminosity('mini') ** 2) * (1 + 0.5 * this.#energy)]
         ],
         duration: 200,
         easing: easeInOutSine
@@ -301,6 +306,8 @@ export class Animator {
 
       this.#headMoveAnim.mini.clear();
 
+      const tiltOffset = { main: this.#params.tiltOffset('head') * 127, mini: this.#params.tiltOffset('mini') * 127 };
+
       for (const { axis, duration, easing } of moves) {
         // factors
         const [pan, tilt] = [[axis[0], 540], [axis[1], 180]].map(([deg, max]) => deg / max);
@@ -311,7 +318,7 @@ export class Animator {
         this.#headMoveAnim.main.add({
           to: [
             ['pan', pan * 255],
-            ['tilt', tilt * 255]
+            ['tilt', clamp(tilt * 255 + tiltOffset.main, 0, 255)]
           ],
           duration: stepDuration,
           easing: easingFn
@@ -321,7 +328,7 @@ export class Animator {
         this.#headMoveAnim.mini.add({
           to: [
             ['pan', 255 - pan * 255],
-            ['tilt', 255 - tilt * 255]
+            ['tilt', clamp(255 - tilt * 255 + tiltOffset.mini, 0, 255)]
           ],
           duration: stepDuration * 2,
           easing: easeInOutSine
