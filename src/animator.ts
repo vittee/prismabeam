@@ -108,6 +108,17 @@ export class Animator {
       })
       .delay(500)
       .start({ loop: true })
+
+    this.#lumiousAnim.par
+      .add({
+        to: [
+          ['master', () => this.#profile.luminous.par * (this.#params.luminosity('par') ** 2)]
+        ],
+        duration: 200,
+        easing: easeInOutSine
+      })
+      .delay(500)
+      .start({ loop: true })
   }
 
   #updateStrobeAnim() {
@@ -509,10 +520,6 @@ export class Animator {
       head: shuffle(profile.variants.head),
       mini: shuffle(profile.variants.mini)
     }
-
-    const { luminous } = profile;
-
-    this.#parLight.set('master', luminous.par);
 
     this.#updateVariants();
     this.#updateFlashAnims();
