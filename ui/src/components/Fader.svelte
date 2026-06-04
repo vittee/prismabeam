@@ -25,10 +25,6 @@
     onchange?.(v);
   }
 
-  function update(y: number) {
-    setValue(valueFromY(y));
-  }
-
   let range = $derived(max - min);
   let count = $derived(Math.floor(range / precision + 1));
   let marks = $derived(Array(count).fill(0).map((_, i) => i * precision + min));
@@ -53,6 +49,7 @@
     function onPointermove(p: PointerEvent) {
       const delta = p.clientY - lastY;
       const next = clamp(value - (delta / height) * range, min, max);
+
       if (next !== value) {
         setValue(next);
         lastY = p.clientY;

@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import Fader from "./Fader.svelte";
+  import Fader from "./components/Fader.svelte";
 
   type Light = {
     luminosity: number;
