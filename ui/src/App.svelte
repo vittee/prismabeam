@@ -1,5 +1,6 @@
 ﻿<script lang="ts">
   import Fader from "./components/Fader.svelte";
+  import Knob from "./components/Knob.svelte";
 
   type Light = {
     luminosity: number;
@@ -88,7 +89,25 @@
           </label>
 
           <div class="controls">
-            <div class="control-group">
+            <div class="knob">
+            {#if fixture.tiltOffset !== undefined}
+              <Knob
+                unitValue={((fixture.tiltOffset + 1) / 2)}
+                anchor={0.5}
+                color={key === 'head' ? 'cyan' : 'yellow'}
+                onchange={(v) => {
+                  fixture.tiltOffset = v * 2 - 1;
+                  send("tiltOffset", key, fixture.tiltOffset);
+                }}
+              />
+              <div class="hint">
+                {(fixture.tiltOffset * 180).toFixed(2)}&deg;
+              </div>
+              <div class="hint">Tilt Offset</div>
+            {/if}
+            </div>
+
+            <div class="fader">
               <Fader
                 value={fixture.luminosity}
                 min={0}
@@ -102,24 +121,6 @@
               <div class="hint">{fixture.luminosity.toFixed(2)}</div>
               <div class="hint">Luminosity</div>
             </div>
-
-            {#if fixture.tiltOffset !== undefined}
-              <div class="control-group">
-                <Fader
-                  value={fixture.tiltOffset}
-                  min={-1}
-                  max={1}
-                  onchange={(v) => {
-                    fixture.tiltOffset = v;
-                    send("tiltOffset", key, v);
-                  }}
-                />
-                <div class="hint">
-                  {(fixture.tiltOffset * 180).toFixed(2)}&deg;
-                </div>
-                <div class="hint">Tilt Offset</div>
-              </div>
-            {/if}
           </div>
         </div>
       {/each}
@@ -182,10 +183,11 @@
 
   .controls {
     display: flex;
+    flex-direction: column;
     gap: 8px;
   }
 
-  .control-group {
+  .fader {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -194,13 +196,22 @@
     gap: 4px;
   }
 
+  .knob {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 1px;
+    width: 100%;
+    height: 70px;
+  }
+
   .hint {
-    font-size: 0.8em;
+    font-size: 0.5em;
     color: #888;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
   .enabled {
     display: flex;
     align-items: center;
