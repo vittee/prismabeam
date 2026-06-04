@@ -34,7 +34,7 @@
   let height = $derived.by(() => el?.clientHeight ?? 0);
 
   let thumb = $state<HTMLDivElement>();
-  let dragging = $state(false);
+  let noAnimation = $state(false);
 
   const fader: Attachment = (node) => {
     el = node as HTMLDivElement;
@@ -57,7 +57,7 @@
     }
 
     function onPointerup(p: PointerEvent) {
-      dragging = false;
+      noAnimation = false;
       captured.releasePointerCapture(p.pointerId);
       offpointermove?.();
       offpointerup?.();
@@ -73,14 +73,14 @@
         return;
       }
 
-      dragging = true;
+      noAnimation = true;
       captured = p.target as HTMLElement;
       captured.setPointerCapture(p.pointerId);
 
       lastY = p.clientY;
 
-      offpointermove = on(p.target, 'pointermove', p => onPointermove(p as PointerEvent))
-      offpointerup = on(p.target, 'pointerup', p => onPointerup(p as PointerEvent))
+      offpointermove = on(p.target, 'pointermove', p => onPointermove(p as PointerEvent));
+      offpointerup = on(p.target, 'pointerup', p => onPointerup(p as PointerEvent));
     }
 
     const offpointerdown = on(node, 'pointerdown', p => onPointerdown(p as PointerEvent));
@@ -138,8 +138,9 @@
       </svg>
     </svg>
 
-    <div class="thumb" bind:this={thumb}
-      class:dragging
+    <div bind:this={thumb}
+      class="thumb"
+      class:noAnimation
       style:top={`calc(${(1 - (value - min) / range) * 100}% - 1em)`}
     />
   </div>
@@ -177,7 +178,7 @@
     transition: top 200ms cubic-bezier(0.785, 0.135, 0.15, 0.86);
   }
 
-  .thumb.dragging {
+  .thumb.noAnimation {
     transition: none;
   }
 </style>
