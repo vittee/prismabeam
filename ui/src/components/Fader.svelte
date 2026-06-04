@@ -64,10 +64,12 @@
     }
 
     function onPointerdown(p: PointerEvent) {
+      if (p.button !== 0) {
+        return;
+      }
+
       if (p.target !== thumb) {
-        if (p.button == 0) {
-          setValue(valueFromY(p.clientY - 1));
-        }
+        setValue(valueFromY(p.clientY - 1));
         return;
       }
 
