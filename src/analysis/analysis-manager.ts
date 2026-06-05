@@ -3,19 +3,22 @@ import path from 'path';
 import { TypedEmitter } from 'tiny-typed-emitter';
 
 export type ActivationTag = { parentGenre: string; name: string; score: number };
+export type MoodScores = { acoustic: number; aggressive: number; happy: number; party: number; relaxed: number };
 
 type AnalysisManagerEvents = {
   ready: () => any;
   bpm: (value: number) => any;
   danceability: (value: number) => any;
   extracted: (tags: ActivationTag[]) => any;
+  mood: (scores: MoodScores) => any;
 };
 
 type WorkerMsg =
   | { type: 'ready' }
   | { type: 'bpm'; value: number }
   | { type: 'danceability'; value: number }
-  | { type: 'extracted'; tags: ActivationTag[] };
+  | { type: 'extracted'; tags: ActivationTag[] }
+  | { type: 'mood'; scores: MoodScores };
 
 export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   #worker: Worker | null = null;
@@ -26,10 +29,13 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   readonly #restartDelayMs = 1000;
 
   readonly #tempoCnnPath: string;
-  constructor(modelPath: string, tempoCnnPath: string) {
+  readonly #moodModelDir: string;
+
+  constructor(modelPath: string, tempoCnnPath: string, moodModelDir: string) {
     super();
     this.#modelPath = modelPath;
     this.#tempoCnnPath = tempoCnnPath;
+    this.#moodModelDir = moodModelDir;
     this.#spawn();
   }
 
@@ -37,6 +43,11 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
     if (!this.#ready || !this.#worker) return;
     const ab = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     this.#worker.postMessage({ type: 'rhythm', buffer: ab }, [ab as ArrayBuffer]);
+  }
+
+  set energy(level: number) {
+    if (!this.#ready || !this.#worker) return;
+    this.#worker.postMessage({ type: 'energy', level });
   }
 
   processMl(buffer: Buffer): void {
@@ -58,11 +69,11 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   #spawn(): void {
     const workerFile = path.join(__dirname, 'analysis-worker.js');
     this.#worker = new Worker(workerFile, {
-      workerData: { modelPath: this.#modelPath },
       workerData: {
         modelPath: this.#modelPath,
-        tempoCnnPath: this.#tempoCnnPath
-      },
+        tempoCnnPath: this.#tempoCnnPath,
+        moodModelDir: this.#moodModelDir
+      }
     });
 
     this.#worker.on('message', (msg: WorkerMsg) => {
@@ -79,6 +90,9 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
           break;
         case 'extracted':
           this.emit('extracted', msg.tags);
+          break;
+        case 'mood':
+          this.emit('mood', msg.scores);
           break;
       }
     });

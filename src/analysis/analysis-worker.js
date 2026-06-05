@@ -11,6 +11,8 @@ const { BpmDetector } = require('./bpm/percival');
 const { BpmDetectorRhythm } = require('./bpm/rhythm');
 const { BpmDetectorTempoCNN } = require('./bpm/tempocnn');
 const { FeatureExtractor } = require('./feature-extractor');
+const { MoodDetector } = require('./mood-detector');
+
 /** @type {'tempocnn' | 'rhythm' | false} */
 const USE_RHYTHM_EXTRACTOR =  false;
 
@@ -47,6 +49,7 @@ async function init() {
   model.predict({
     melSpectrum: Array(128).fill(Array(96).fill(0)),
     melBandsSize: 96,
+    /** @ts-ignore */
     patchSize: 128,
     frameSize: 128,
   });
@@ -61,16 +64,43 @@ async function init() {
   } else {
     bpmDetector = new BpmDetector(48000, 8, 2);
   }
+
   const extractor = new FeatureExtractor(model);
 
+  const moodDetector = new MoodDetector(tf, workerData.moodModelDir);
+  await moodDetector.initialize();
+
+  let latestEnergy = 0;
+  let latestDance = 0;
+  /** @type {import('./mood-detector').MoodScores | null} */ let latestMood = null;
+
   bpmDetector.on('bpm', /** @param {number} v */ v => parentPort.postMessage({ type: 'bpm', value: v }));
-  bpmDetector.on('danceability', /** @param {number} v */ v => parentPort.postMessage({ type: 'danceability', value: v }));
+  bpmDetector.on('danceability', /** @param {number} v */ (v) => {
+    latestDance = v;
+    bpmDetector.setContext(latestEnergy, latestDance, latestMood ?? undefined);
+    parentPort.postMessage({ type: 'danceability', value: v });
+  });
+
+  moodDetector.on('mood', /** @param {import('./mood-detector').MoodScores} scores */ (scores) => {
+    latestMood = scores;
+    bpmDetector.setContext(latestEnergy, latestDance, scores);
+    parentPort.postMessage({ type: 'mood', scores });
+  });
+
   extractor.on('extracted', /** @param {any[]} tags */ tags => parentPort.postMessage({ type: 'extracted', tags }));
 
-  parentPort.on('message', (/** @type {{ type: string; buffer: ArrayBuffer }} */ msg) => {
+  parentPort.on('message', (/** @type {{ type: string; buffer: ArrayBuffer; level?: number; bpm?: number }} */ msg) => {
+    if (msg.type === 'energy') {
+      latestEnergy = msg.level ?? 0;
+      bpmDetector.setContext(latestEnergy, latestDance, latestMood ?? undefined);
+      return;
+    }
     const buf = Buffer.from(msg.buffer);
     if (msg.type === 'rhythm') bpmDetector.process(buf);
-    else if (msg.type === 'ml') extractor.process(buf);
+    if (msg.type === 'ml') {
+      extractor.process(buf);
+      moodDetector.process(buf);
+    }
   });
 
   parentPort.postMessage({ type: 'ready' });

@@ -58,7 +58,7 @@ async function main() {
 
   await dmx.open();
 
-  const analysis = new AnalysisManager('file://./models/musicnn/model.json', path.resolve('models/tempocnn/deeptemp-k4-3'));
+  const analysis = new AnalysisManager('file://./models/musicnn/model.json', path.resolve('models/tempocnn/deeptemp-k4-3'), path.resolve('models/mood'));
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
 
   const energyDetector = new EnergyDetector(48000);
@@ -115,6 +115,7 @@ async function main() {
 
   energyDetector.on('energy', (level) => {
     animator.energy = level;
+    analysis.energy = level;
   });
 
   energyDetector.on('kick', () => { animator.kick(); });
