@@ -15,12 +15,14 @@
     head: MovingHead;
     mini: MovingHead;
     par: Light;
+    kickDelay: number;
   };
 
   let s = $state<State>({
     head: { luminosity: 1, enabled: true, tiltOffset: 0 },
     mini: { luminosity: 1, enabled: true, tiltOffset: 0 },
     par: { luminosity: 1, enabled: true },
+    kickDelay: 0,
   });
 
   let connected = $state(false);
@@ -46,14 +48,20 @@
       if (msg.type === "state") {
         s = msg.state;
       } else if (msg.type === "update") {
-        (s as any)[msg.key][msg.param] = msg.value;
+        let o = s as any;
+
+        if (msg.key !== undefined) {
+          o = o[msg.key]
+        }
+
+        o[msg.param] = msg.value;
       }
     };
   }
 
   connect();
 
-  function send(param: string, key: string, value: number | boolean) {
+  function sendFixture(param: string, key: string, value: number | boolean) {
     if (ws.readyState !== WebSocket.OPEN) {
       return;
     }
@@ -73,7 +81,7 @@
     <section class="fixtures">
       {#each [["head", "Main"], ["mini", "Mini"], ["par", "Par"]] as [key, label]}
         {@const fixture = (s as any)[key]}
-        <div class="fixture">
+        <div class="strip">
           <div class="label">{label}</div>
 
           <label class="enabled">
@@ -82,7 +90,7 @@
               checked={fixture.enabled}
               onchange={(e) => {
                 fixture.enabled = e.currentTarget.checked;
-                send("enabled", key, e.currentTarget.checked);
+                sendFixture("enabled", key, e.currentTarget.checked);
               }}
             />
             Enabled
@@ -97,7 +105,7 @@
                 color={key === 'head' ? 'cyan' : 'yellow'}
                 onchange={(v) => {
                   fixture.tiltOffset = v * 2 - 1;
-                  send("tiltOffset", key, fixture.tiltOffset);
+                  sendFixture("tiltOffset", key, fixture.tiltOffset);
                 }}
               />
               <div class="hint">
@@ -115,7 +123,7 @@
                 normalValue={1.0}
                 onchange={(v) => {
                   fixture.luminosity = v;
-                  send("luminosity", key, v);
+                  sendFixture("luminosity", key, v);
                 }}
               />
               <div class="hint">{fixture.luminosity.toFixed(2)}</div>
@@ -124,6 +132,22 @@
           </div>
         </div>
       {/each}
+
+      <div class="strip">
+        <div class="label">Adj</div>
+        <div class="knob">
+          <Knob
+            unitValue={s.kickDelay / 1000}
+            onchange={(v) => {
+              s.kickDelay = Math.round(v * 1000);
+              ws.send(JSON.stringify({ action: "set", set: { param: "kickDelay", value: s.kickDelay } }));
+            }}
+            color="red"
+          />
+          <div class="hint">{s.kickDelay} ms</div>
+          <div class="hint">Kick Delay</div>
+        </div>
+      </div>
     </section>
   </div>
 </main>
@@ -161,10 +185,10 @@
 
   .fixtures {
     display: flex;
-    gap: 0.5em;
+    gap: 0.25em;
   }
 
-  .fixture {
+  .strip {
     display: flex;
     flex-direction: column;
     gap: 1em;
@@ -191,8 +215,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 60px;
-    height: 300px;
+    width: 100%;
+    height: 250px;
     gap: 4px;
   }
 

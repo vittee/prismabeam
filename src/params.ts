@@ -20,6 +20,7 @@ type ParamEvents = {
   luminosity(key: keyof Params, newValue: number): void;
   enabled(key: keyof Params, newValue: boolean): void;
   tiltOffset(key: Exclude<keyof Params, 'par'>, newValue: number): void;
+  kickDelay(newValue: number): void;
 };
 
 export class ParamStore extends TypedEmitter<ParamEvents> {
@@ -27,6 +28,19 @@ export class ParamStore extends TypedEmitter<ParamEvents> {
     head: { luminosity: 1.0, enabled: true, tiltOffset: 0 },
     mini: { luminosity: 1.0, enabled: true, tiltOffset: 0 },
     par:  { luminosity: 1.0, enabled: true },
+  }
+
+  #kickDelay = 420;
+
+  kickDelay(newValue?: number) {
+    if (newValue !== undefined) {
+      newValue = clamp(newValue, 0, 1000);
+      if (newValue !== this.#kickDelay) {
+        this.#kickDelay = newValue;
+        this.emit('kickDelay', newValue);
+      }
+    }
+    return this.#kickDelay;
   }
 
   luminosity(key: keyof Params, newValue?: number) {

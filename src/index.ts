@@ -120,7 +120,31 @@ async function main() {
     analysis.energy = level;
   });
 
-  energyDetector.on('kick', () => { animator.kick(); });
+  const kicks: number[] = [];
+
+  energyDetector.on('kick', () => {
+    kickBpmTracker.kick();
+
+    const kickBpm = kickBpmTracker.getBpm();
+    if (kickBpm !== null) {
+      analysis.kickBpm = kickBpm;
+    }
+
+    kicks.push(Date.now());
+    if (kicks.length > 8) {
+      kicks.shift();
+    }
+  });
+
+  setInterval(() => {
+    const now = Date.now();
+    const delay = params.kickDelay();
+    const due = kicks.findIndex(t => now >= t + delay);
+    if (due !== -1) {
+      kicks.splice(0, due + 1);
+      animator.kick();
+    }
+  }, 1000 / 120);
 }
 
 main();

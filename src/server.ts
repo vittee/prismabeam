@@ -21,6 +21,10 @@ const SetParam = z.discriminatedUnion('param', [
     key: Fixtures.exclude(['par']),
     value: z.number().min(-1).max(1)
   }),
+  z.object({
+    param: z.literal('kickDelay'),
+    value: z.number().min(0).max(1000)
+  }),
 ]);
 
 const SetAction = z.object({
@@ -53,6 +57,7 @@ export function createWsServer(params: ParamStore, port: number) {
     head: { ...getLuminousity('head'), tiltOffset: params.tiltOffset('head') },
     mini: { ...getLuminousity('mini'), tiltOffset: params.tiltOffset('mini') },
     par: getLuminousity('par'),
+    kickDelay: params.kickDelay(),
   });
 
   wss.on('connection', (ws) => {
@@ -78,6 +83,10 @@ export function createWsServer(params: ParamStore, port: number) {
           { action: 'set', set: { param: 'tiltOffset', key: P.select('key'), value: P.select('value') } },
           ({ key, value }) => params.tiltOffset(key, value)
         )
+        .with(
+          { action: 'set', set: { param: 'kickDelay', value: P.select() } },
+          (value) => params.kickDelay(value)
+        )
         .exhaustive()
     });
   });
@@ -85,7 +94,9 @@ export function createWsServer(params: ParamStore, port: number) {
   const createUpdateBroadcast = (param: string) => (key: string, value: any) => broadcast({ type: 'update', param, key, value });
 
   ['luminosity', 'enabled', 'tiltOffset']
-    .map(t => params.on(t as any, createUpdateBroadcast(t)))
+    .map(t => params.on(t as any, createUpdateBroadcast(t)));
+
+  params.on('kickDelay', (value) => broadcast({ type: 'update', param: 'kickDelay', value }));
 
   console.log(`WS control server on :${port}`);
 
