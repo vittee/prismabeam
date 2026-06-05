@@ -7,8 +7,12 @@ require('@tensorflow/tfjs-backend-wasm');
 // @ts-ignore
 const { EssentiaModel, EssentiaWASM } = require('essentia.js');
 
-const { BpmDetector } = require('./bpm-detector');
+const { BpmDetector } = require('./bpm/percival');
+const { BpmDetectorRhythm } = require('./bpm/rhythm');
+const { BpmDetectorTempoCNN } = require('./bpm/tempocnn');
 const { FeatureExtractor } = require('./feature-extractor');
+/** @type {'tempocnn' | 'rhythm' | false} */
+const USE_RHYTHM_EXTRACTOR =  false;
 
 
 // Essentia WASM registers its abort() as the unhandledRejection handler on import.
@@ -34,6 +38,9 @@ async function init() {
 
   await tf.setBackend('wasm');
 
+  /**
+   * @type {import('essentia.js/dist/machinelearning').TensorflowMusiCNN}
+   */
   const model = new EssentiaModel.TensorflowMusiCNN(tf, workerData.modelPath);
   await model.initialize();
 
@@ -44,7 +51,16 @@ async function init() {
     frameSize: 128,
   });
 
-  const bpmDetector = new BpmDetector(44100, 4, 1);
+  let bpmDetector;
+  if (USE_RHYTHM_EXTRACTOR === 'tempocnn') {
+    const detector = new BpmDetectorTempoCNN(tf, workerData.tempoCnnPath, 48000);
+    await detector.initialize();
+    bpmDetector = detector;
+  } else if (USE_RHYTHM_EXTRACTOR === 'rhythm') {
+    bpmDetector = new BpmDetectorRhythm(48000, 4, 1);
+  } else {
+    bpmDetector = new BpmDetector(48000, 8, 2);
+  }
   const extractor = new FeatureExtractor(model);
 
   bpmDetector.on('bpm', /** @param {number} v */ v => parentPort.postMessage({ type: 'bpm', value: v }));

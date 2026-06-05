@@ -25,9 +25,11 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   readonly #modelPath: string;
   readonly #restartDelayMs = 1000;
 
-  constructor(modelPath: string) {
+  readonly #tempoCnnPath: string;
+  constructor(modelPath: string, tempoCnnPath: string) {
     super();
     this.#modelPath = modelPath;
+    this.#tempoCnnPath = tempoCnnPath;
     this.#spawn();
   }
 
@@ -57,6 +59,10 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
     const workerFile = path.join(__dirname, 'analysis-worker.js');
     this.#worker = new Worker(workerFile, {
       workerData: { modelPath: this.#modelPath },
+      workerData: {
+        modelPath: this.#modelPath,
+        tempoCnnPath: this.#tempoCnnPath
+      },
     });
 
     this.#worker.on('message', (msg: WorkerMsg) => {

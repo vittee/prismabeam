@@ -1,4 +1,5 @@
 import dgram from 'dgram';
+import path from 'path';
 import { SerialPort } from 'serialport';
 
 import { DMX } from './transport/dmx';
@@ -57,7 +58,7 @@ async function main() {
 
   await dmx.open();
 
-  const analysis = new AnalysisManager('file://./model-tfjs/model.json');
+  const analysis = new AnalysisManager('file://./models/musicnn/model.json', path.resolve('models/tempocnn/deeptemp-k4-3'));
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
 
   const energyDetector = new EnergyDetector(48000);
