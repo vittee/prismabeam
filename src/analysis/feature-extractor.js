@@ -32,6 +32,14 @@ function normalizeActivations(activations) {
   }));
 }
 
+/**
+ * @typedef {Object} FeatureExtractorEvents
+ * @property {(tags: ActivationTag[]) => any} extracted
+ */
+
+/**
+ * @extends {TypedEmitter<FeatureExtractorEvents>}
+ */
 class FeatureExtractor extends TypedEmitter {
   #frameSize = 512;
   #hopSize = 256;
@@ -41,7 +49,10 @@ class FeatureExtractor extends TypedEmitter {
   /** @type {import('./ringbuffer').RingBuffer} */ #frameRingBuffer;
   /** @type {Float32Array[]} */ #hopData;
   /** @type {Float32Array[]} */ #frameData;
-  /** @type {any} */ #extractor;
+  /**
+   * @type {import('essentia.js/dist/machinelearning').EssentiaTFInputExtractor}
+   */
+  #extractor;
   #activationSmoother = new ActivationSmoother(8);
 
   #features = {
@@ -86,6 +97,7 @@ class FeatureExtractor extends TypedEmitter {
 
       if (rms > 1e-6) {
         const computed = this.#extractor.compute(frame);
+        /** @ts-ignore */
         this.#features.melSpectrum.push(computed.melSpectrum);
       } else {
         this.#features.melSpectrum.push(Array(96).fill(0));
