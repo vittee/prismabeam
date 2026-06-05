@@ -95,6 +95,10 @@ async function init() {
       bpmDetector.setContext(latestEnergy, latestDance, latestMood ?? undefined);
       return;
     }
+    if (msg.type === 'kickBpm') {
+      bpmDetector.applyKickBpm(msg.bpm ?? 0);
+      return;
+    }
     const buf = Buffer.from(msg.buffer);
     if (msg.type === 'rhythm') bpmDetector.process(buf);
     if (msg.type === 'ml') {

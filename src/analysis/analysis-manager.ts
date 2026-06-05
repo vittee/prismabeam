@@ -50,6 +50,11 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
     this.#worker.postMessage({ type: 'energy', level });
   }
 
+  set kickBpm(bpm: number) {
+    if (!this.#ready || !this.#worker) return;
+    this.#worker.postMessage({ type: 'kickBpm', bpm });
+  }
+
   processMl(buffer: Buffer): void {
     if (!this.#ready || !this.#worker) return;
     const ab = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);

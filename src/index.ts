@@ -10,6 +10,7 @@ import { Mini30WMovingHeadPrismGoboWithLaser } from './fixtures/moving-head/mini
 import { TADAMK54Rgb } from './fixtures/par/tadamk54';
 import { AnalysisManager } from './analysis/analysis-manager';
 import { EnergyDetector } from './analysis/energy-detector';
+import { KickBpmTracker } from './analysis/kick-bpm-tracker';
 import { Animator } from './animator';
 import { ParamStore } from './params';
 import { createWsServer } from './server';
@@ -62,6 +63,7 @@ async function main() {
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
 
   const energyDetector = new EnergyDetector(48000);
+  const kickBpmTracker = new KickBpmTracker();
 
   const params = new ParamStore();
   createWsServer(params, 7400);
