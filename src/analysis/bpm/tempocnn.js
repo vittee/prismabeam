@@ -224,6 +224,7 @@ class TempoCNNBpmDetector extends TypedEmitter {
       }
 
       let bpm = BPM_CLASS_MIN + argmax;
+      if (bpm < 60) return; // sub-60 is a detection artifact
 
       console.log(`[TempoCNN] raw=${bpm.toFixed(1)}`);
 

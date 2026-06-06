@@ -44,7 +44,7 @@ export class KickBpmTracker {
     const avgInterval = filtered.reduce((s, v) => s + v, 0) / filtered.length;
     const bpm = 60000 / avgInterval;
 
-    if (!isFinite(bpm) || bpm < 40 || bpm > 220) return null;
+    if (!isFinite(bpm) || bpm < 60 || bpm > 220) return null;
     return bpm;
   }
 

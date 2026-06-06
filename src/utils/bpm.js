@@ -81,7 +81,7 @@ function correctHarmonicError(detected, kickBpm, direction = 0, tolerance = 0.15
     directionConfirms = direction > 0;  // fast direction confirms doubling
   }
 
-  if (candidate === null || candidate < 40 || candidate > 220) return detected;
+  if (candidate === null || candidate < 60 || candidate > 220) return detected;
 
   // Require directional confirmation unless direction is near-zero (uncertain)
   if (Math.abs(direction) > 0.15 && !directionConfirms) return detected;

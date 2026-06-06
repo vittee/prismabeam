@@ -114,7 +114,7 @@ class PercivalBpmDetector extends TypedEmitter {
 
         if (result?.bpm != null) {
           let bpm = result.bpm;
-          if (isFinite(bpm) && bpm >= 40 && bpm <= 220) {
+          if (isFinite(bpm) && bpm >= 60 && bpm <= 220) {
             const ref = this.#bpmHistory.length >= 4
               ? median(this.#bpmHistory)
               : this.#lastRawBpm > 0
