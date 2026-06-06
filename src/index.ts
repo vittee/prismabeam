@@ -1,5 +1,7 @@
-import dgram from 'dgram';
-import path from 'path';
+import dgram from 'node:dgram';
+import path from 'node:path';
+import http from 'node:http';
+import express from 'express';
 import { SerialPort } from 'serialport';
 
 import { DMX } from './transport/dmx';
@@ -45,6 +47,10 @@ async function main() {
 
   console.log('Found device:', device.path);
 
+  const httpPort = +(process.env.PORT || 7400);
+  const taggingPort = +(process.env.TAGGING_PORT || 7440);
+  const audioPort = +(process.env.AUDIO_PORT || 7441);
+
   const dmx = new DMX(device.path);
   const universe = new Universe(dmx);
 
@@ -66,7 +72,6 @@ async function main() {
   const kickBpmTracker = new KickBpmTracker();
 
   const params = new ParamStore();
-  createWsServer(params, 7400);
 
   const animator = new Animator({
     movingHead: {
@@ -89,15 +94,21 @@ async function main() {
     energyDetector.process(data);
   });
 
-  const taggingPort = +(process.env.TAGGING_PORT || 7440);
-  const audioPort = +(process.env.AUDIO_PORT || 7441);
-
   await Promise.all([
     new Promise<void>(resolve => taggingSocket.bind(taggingPort, resolve)),
     new Promise<void>(resolve => audioSocket.bind(audioPort, resolve))
   ]);
 
-  console.log(`Listening — audio:${audioPort} audio-tagging:${taggingPort}`);
+  const expressApp = express();
+  const httpServer = http.createServer(expressApp);
+
+  expressApp.set('trust proxy', 1);
+
+  createWsServer(httpServer, params);
+
+  httpServer.listen(httpPort)
+
+  console.log(`Listening — http:${httpPort} audio:${audioPort} audio-tagging:${taggingPort}`);
 
   analysis.on('extracted', ([topTag]) => {
     if (topTag?.score) {

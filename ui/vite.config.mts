@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [svelte()],
   server: {
     proxy: {
-
+      '/ws': {
+        target: 'ws://localhost:7400',
+        ws: true
+      }
     }
   }
 });

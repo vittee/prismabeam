@@ -1,4 +1,6 @@
-﻿import { WebSocketServer, WebSocket } from 'ws';
+﻿import { Duplex } from 'node:stream';
+import http, { IncomingMessage } from 'node:http';
+import { WebSocketServer, WebSocket } from 'ws';
 import { z } from 'zod';
 import { match, P } from 'ts-pattern';
 import { Params, ParamStore } from './params';
@@ -36,12 +38,65 @@ const Message = z.discriminatedUnion('action', [
   SetAction
 ]);
 
-export function createWsServer(params: ParamStore, port: number) {
-  const wss = new WebSocketServer({ port });
+export function createWsServer(httpServer: http.Server, params: ParamStore) {
+  const server = new WebSocketServer({
+    noServer: true,
+    clientTracking: false
+  });
+
+  const sockets = new Set<WebSocket>();
+
+  httpServer.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    if (!req.url) {
+      return;
+    }
+
+    if (!req.url.startsWith('/ws')) {
+      return;
+    }
+
+    server.handleUpgrade(req, socket, head, (socket) => {
+      sockets.add(socket);
+
+      socket.send(JSON.stringify({ type: 'state', state: snapshot() }));
+
+      socket
+        .on('close', () => {
+          sockets.delete(socket);
+        })
+        .on('message', (raw) => {
+          const parsed = Message.safeParse(JSON.parse(raw.toString()));
+
+          if (!parsed.success) {
+            return;
+          }
+
+          match(parsed.data)
+            .with(
+              { action: 'set', set: { param: 'luminosity', key: P.select('key'), value: P.select('value') } },
+              ({ key, value }) => params.luminosity(key, value)
+            )
+            .with(
+              { action: 'set', set: { param: 'enabled', key: P.select('key'), value: P.select('value') } },
+              ({ key, value }) => params.enabled(key, value)
+            )
+            .with(
+              { action: 'set', set: { param: 'tiltOffset', key: P.select('key'), value: P.select('value') } },
+              ({ key, value }) => params.tiltOffset(key, value)
+            )
+            .with(
+              { action: 'set', set: { param: 'kickDelay', value: P.select() } },
+              (value) => params.kickDelay(value)
+            )
+            .exhaustive()
+        });
+    });
+  });
 
   const broadcast = (data: object) => {
     const msg = JSON.stringify(data);
-    for (const client of wss.clients) {
+
+    for (const client of sockets) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(msg);
       }
@@ -60,37 +115,6 @@ export function createWsServer(params: ParamStore, port: number) {
     kickDelay: params.kickDelay(),
   });
 
-  wss.on('connection', (ws) => {
-    ws.send(JSON.stringify({ type: 'state', state: snapshot() }));
-
-    ws.on('message', (raw) => {
-      const parsed = Message.safeParse(JSON.parse(raw.toString()));
-
-      if (!parsed.success) {
-        return;
-      }
-
-      match(parsed.data)
-        .with(
-          { action: 'set', set: { param: 'luminosity', key: P.select('key'), value: P.select('value') } },
-          ({ key, value }) => params.luminosity(key, value)
-        )
-        .with(
-          { action: 'set', set: { param: 'enabled', key: P.select('key'), value: P.select('value') } },
-          ({ key, value }) => params.enabled(key, value)
-        )
-        .with(
-          { action: 'set', set: { param: 'tiltOffset', key: P.select('key'), value: P.select('value') } },
-          ({ key, value }) => params.tiltOffset(key, value)
-        )
-        .with(
-          { action: 'set', set: { param: 'kickDelay', value: P.select() } },
-          (value) => params.kickDelay(value)
-        )
-        .exhaustive()
-    });
-  });
-
   const createUpdateBroadcast = (param: string) => (key: string, value: any) => broadcast({ type: 'update', param, key, value });
 
   ['luminosity', 'enabled', 'tiltOffset']
@@ -98,7 +122,5 @@ export function createWsServer(params: ParamStore, port: number) {
 
   params.on('kickDelay', (value) => broadcast({ type: 'update', param: 'kickDelay', value }));
 
-  console.log(`WS control server on :${port}`);
-
-  return wss;
+  return server;
 }

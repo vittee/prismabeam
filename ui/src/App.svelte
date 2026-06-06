@@ -28,11 +28,11 @@
 
   let connected = $state(false);
 
-  const WS_URL = `ws://${location.hostname}:7400`;
+  const websocketUrl = location.protocol.replace('http', 'ws') + '//' + location.host + '/ws';
   let ws: WebSocket;
 
   function connect() {
-    ws = new WebSocket(WS_URL);
+    ws = new WebSocket(websocketUrl);
 
     ws.onopen = () => {
       connected = true;
