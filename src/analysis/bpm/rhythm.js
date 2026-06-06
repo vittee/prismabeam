@@ -52,15 +52,9 @@ class RhythmBpmDetector extends TypedEmitter {
   /**
    * @param {number} energy 0–1
    * @param {number} dance  0–1
-   * @param {number} [moodBpm] mood-derived BPM estimate (overrides energy/dance when provided)
    */
-  /**
-   * @param {number} energy 0–1
-   * @param {number} dance  0–1
-   * @param {{ acoustic?: number; aggressive?: number; happy?: number; party?: number; relaxed?: number }} [mood]
-   */
-  setContext(energy, dance, mood) {
-    this.#tempoDir = tempoDirection(energy, dance, mood);
+  setContext(energy, dance) {
+    this.#tempoDir = tempoDirection(energy, dance);
   }
 
   /** @param {number} kickBpm */

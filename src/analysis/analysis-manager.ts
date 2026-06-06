@@ -3,22 +3,19 @@ import path from 'path';
 import { TypedEmitter } from 'tiny-typed-emitter';
 
 export type ActivationTag = { parentGenre: string; name: string; score: number };
-export type MoodScores = { acoustic: number; aggressive: number; happy: number; party: number; relaxed: number };
 
 type AnalysisManagerEvents = {
   ready: () => any;
   bpm: (value: number) => any;
   danceability: (value: number) => any;
   extracted: (tags: ActivationTag[]) => any;
-  mood: (scores: MoodScores) => any;
 };
 
 type WorkerMsg =
   | { type: 'ready' }
   | { type: 'bpm'; value: number }
   | { type: 'danceability'; value: number }
-  | { type: 'extracted'; tags: ActivationTag[] }
-  | { type: 'mood'; scores: MoodScores };
+  | { type: 'extracted'; tags: ActivationTag[] };
 
 export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   #worker: Worker | null = null;
@@ -29,13 +26,11 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
   readonly #restartDelayMs = 1000;
 
   readonly #tempoCnnPath: string;
-  readonly #moodModelDir: string;
 
-  constructor(modelPath: string, tempoCnnPath: string, moodModelDir: string) {
+  constructor(modelPath: string, tempoCnnPath: string) {
     super();
     this.#modelPath = modelPath;
     this.#tempoCnnPath = tempoCnnPath;
-    this.#moodModelDir = moodModelDir;
     this.#spawn();
   }
 
@@ -77,7 +72,6 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
       workerData: {
         modelPath: this.#modelPath,
         tempoCnnPath: this.#tempoCnnPath,
-        moodModelDir: this.#moodModelDir
       }
     });
 
@@ -95,9 +89,6 @@ export class AnalysisManager extends TypedEmitter<AnalysisManagerEvents> {
           break;
         case 'extracted':
           this.emit('extracted', msg.tags);
-          break;
-        case 'mood':
-          this.emit('mood', msg.scores);
           break;
       }
     });

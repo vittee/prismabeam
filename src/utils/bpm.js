@@ -35,26 +35,15 @@ function foldBpm(bpm, ref, min = 40, max = 220) {
 }
 
 /**
- * Compute a tempo direction scalar from energy, danceability, and mood scores.
+ * Compute a tempo direction scalar from energy and danceability.
  * Returns a value in [-1, +1]: negative = slow, positive = fast, 0 = unknown.
  *
  * @param {number} energy  0–1
  * @param {number} dance   0–1
- * @param {{ acoustic?: number; aggressive?: number; happy?: number; party?: number; relaxed?: number }} [mood]
  * @returns {number}
  */
-function tempoDirection(energy, dance, mood = {}) {
-  // energy and dance both push toward fast
-  let score = (energy - 0.5) * 0.4 + (dance - 0.5) * 0.4;
-
-  // mood contributions: slow moods push negative, fast moods push positive
-  score -= (mood.relaxed  ?? 0) * 0.5;
-  score -= (mood.acoustic ?? 0) * 0.3;
-  score += (mood.party     ?? 0) * 0.5;
-  score += (mood.aggressive ?? 0) * 0.4;
-  // happy is neutral — no push
-
-  // clamp to [-1, +1]
+function tempoDirection(energy, dance) {
+  const score = (energy - 0.5) * 0.4 + (dance - 0.5) * 0.4;
   return Math.max(-1, Math.min(1, score));
 }
 
