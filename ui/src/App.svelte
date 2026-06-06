@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
   import Fader from "./components/Fader.svelte";
   import Knob from "./components/Knob.svelte";
+  import ToggleButton from "./components/ToggleButton.svelte";
 
   type Light = {
     luminosity: number;
@@ -84,17 +85,18 @@
         <div class="strip">
           <div class="label">{label}</div>
 
-          <label class="enabled">
-            <input
-              type="checkbox"
-              checked={fixture.enabled}
-              onchange={(e) => {
-                fixture.enabled = e.currentTarget.checked;
-                sendFixture("enabled", key, e.currentTarget.checked);
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35em">
+            <ToggleButton
+              size={20}
+              color="green"
+              active={fixture.enabled}
+              onclick={() => {
+                fixture.enabled = !fixture.enabled;
+                sendFixture('enabled', key, fixture.enabled);
               }}
             />
-            Enabled
-          </label>
+            <div class="hint">{fixture.enabled ? 'ON' : 'OFF'}</div>
+          </div>
 
           <div class="controls">
             <div class="knob">
@@ -235,14 +237,5 @@
     color: #888;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  .enabled {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 12px;
-    cursor: pointer;
-    user-select: none;
   }
 </style>
