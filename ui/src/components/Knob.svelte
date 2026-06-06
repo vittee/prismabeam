@@ -15,13 +15,25 @@
       size?: [min: number, max: number];
     }
     unitValue: number; // 0-1
+    initialValue?: number;
     anchor?: number;
     color?: string;
 
     onchange?: (value: number) => void;
   };
 
-  let { unitValue = $bindable(), radius = 20, trackWidth = 1.5, angleOffset = Math.PI / 5, indicator, anchor = 0, color, onchange }: Props = $props();
+  let {
+    unitValue = $bindable(),
+    initialValue,
+    radius = 20,
+    trackWidth = 1.5,
+    angleOffset = Math.PI / 5,
+    indicator,
+    anchor = 0,
+    color,
+    onchange
+  }: Props = $props();
+
   let { witdh: indicatorWidth = 2.5, size: indicatorSize } = indicator ?? {};
 
   let width = $derived(radius * 2.0);
@@ -76,8 +88,8 @@
     let dragValue = 0;
 
     function setValue(v: number) {
-      unitValue = v;
-      onchange?.(v);
+      unitValue = clamp(v, 0, 1);
+      onchange?.(unitValue);
     }
 
     function onPointermove(p: PointerEvent) {
@@ -123,7 +135,7 @@
 
     const offpointerdown = on(node, 'pointerdown', p => onPointerdown(p as PointerEvent));
 
-    const offdblclick = on(node, 'dblclick', () => setValue(anchor));
+    const offdblclick = on(node, 'dblclick', () => setValue(initialValue ?? anchor));
 
     return () => {
       offpointerdown();

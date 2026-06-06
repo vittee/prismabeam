@@ -140,6 +140,7 @@
         <div class="knob">
           <Knob
             unitValue={s.kickDelay / 1000}
+            initialValue={420 / 1000}
             onchange={(v) => {
               s.kickDelay = Math.round(v * 1000);
               ws.send(JSON.stringify({ action: "set", set: { param: "kickDelay", value: s.kickDelay } }));
