@@ -4,7 +4,7 @@
 const { workerData, parentPort: outerPort } = require('worker_threads');
 // @ts-ignore
 const { Essentia, EssentiaWASM } = require('essentia.js');
-const { median } = require('../utils/math');
+const { median } = require('../../utils/math');
 
 process.removeAllListeners('unhandledRejection');
 process.on('unhandledRejection', (/** @type {unknown} */ reason) => {

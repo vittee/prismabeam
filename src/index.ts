@@ -9,7 +9,7 @@ import { YUERGenericBeamSpot } from './fixtures/moving-head/yeur';
 import { Mini30WMovingHeadPrismGoboWithLaser } from './fixtures/moving-head/mini';
 import { TADAMK54Rgb } from './fixtures/par/tadamk54';
 import { AnalysisManager } from './analysis/analysis-manager';
-import { EnergyDetector } from './analysis/energy-detector';
+import { EnergyDetector } from './analysis/energy/energy-detector';
 import { KickBpmTracker } from './analysis/bpm/kick-bpm-tracker';
 import { Animator } from './animator';
 import { ParamStore } from './params';
