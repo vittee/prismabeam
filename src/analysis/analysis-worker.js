@@ -10,7 +10,7 @@ const { EssentiaModel, EssentiaWASM } = require('essentia.js');
 const { BpmDetector } = require('./bpm/percival');
 const { BpmDetectorRhythm } = require('./bpm/rhythm');
 const { BpmDetectorTempoCNN } = require('./bpm/tempocnn');
-const { FeatureExtractor } = require('./feature-extractor');
+const { FeatureExtractor } = require('./feature/feature-extractor');
 
 /** @type {'tempocnn' | 'rhythm' | false} */
 const USE_RHYTHM_EXTRACTOR =  false;

@@ -6,13 +6,13 @@ const { chain, min, max } = require('lodash');
 // @ts-ignore
 const { EssentiaModel, EssentiaWASM } = require('essentia.js');
 
-const { RingBuffer } = require('./ringbuffer');
-const { PatchHop } = require('./patch-hop');
+const { RingBuffer } = require('../ringbuffer');
+const { PatchHop } = require('../patch-hop');
 const { ActivationSmoother } = require('./activation-smoother');
-const { tagLabels } = require('./labels');
+const { tagLabels } = require('../labels');
 
 /**
- * @typedef {import('./analysis-manager').ActivationTag} ActivationTag
+ * @typedef {import('../analysis-manager').ActivationTag} ActivationTag
  */
 
 /**
@@ -44,9 +44,9 @@ class FeatureExtractor extends TypedEmitter {
   #frameSize = 512;
   #hopSize = 256;
   #channelCount = 1;
-  /** @type {import('./patch-hop').PatchHop} */ #patchHop;
-  /** @type {import('./ringbuffer').RingBuffer} */ #hopRingBuffer;
-  /** @type {import('./ringbuffer').RingBuffer} */ #frameRingBuffer;
+  /** @type {import('../patch-hop').PatchHop} */ #patchHop;
+  /** @type {import('../ringbuffer').RingBuffer} */ #hopRingBuffer;
+  /** @type {import('../ringbuffer').RingBuffer} */ #frameRingBuffer;
   /** @type {Float32Array[]} */ #hopData;
   /** @type {Float32Array[]} */ #frameData;
   /**

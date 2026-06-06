@@ -1,6 +1,6 @@
 // @ts-check
 
-import { median } from '../utils/math';
+import { median } from '../../utils/math';
 
 /**
  * Tracks kick timestamps and estimates BPM from inter-kick intervals.

@@ -1,8 +1,8 @@
 // @ts-check
 'use strict';
 
-const { median } = require('../utils/math');
-const { tagLabels } = require('./labels');
+const { median } = require('../../utils/math');
+const { tagLabels } = require('../labels');
 
 class ActivationSmoother {
   /** @type {Record<string, number[]>} */
