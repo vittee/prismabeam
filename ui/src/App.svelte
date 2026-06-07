@@ -87,7 +87,7 @@
 
           <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35em">
             <ToggleButton
-              size={20}
+              size="1.5em"
               color="green"
               active={fixture.enabled}
               onclick={() => {
@@ -159,13 +159,14 @@
   :global(body)  {
     background: #111;
     color: #eee;
-    padding: 1.2em;
+    font-size: 2rem;
+    padding: 0.5rem;
     font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
   }
 
   main {
     display: flex;
-    min-height: calc(100vh - 1.2em * 2);
+    min-height: calc(100vh - 0.5rem * 2);
     align-items: center;
     justify-content: center;
   }
@@ -219,7 +220,7 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 250px;
+    height: 20em;
     gap: 4px;
   }
 
@@ -230,7 +231,7 @@
     justify-content: space-evenly;
     gap: 1px;
     width: 100%;
-    height: 70px;
+    height: 4em;
   }
 
   .hint {
