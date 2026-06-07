@@ -85,7 +85,6 @@ class FeatureExtractor extends TypedEmitter {
     this.#hopRingBuffer.push([samples]);
 
     while (this.#hopRingBuffer.framesAvailable >= this.#hopSize) {
-      this.#frameRingBuffer.push(this.#hopData);
       this.#hopRingBuffer.pull(this.#hopData);
       this.#frameRingBuffer.push(this.#hopData);
 
