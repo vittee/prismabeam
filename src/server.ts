@@ -32,7 +32,7 @@ const SetParam = z.discriminatedUnion('param', [
 const SetAction = z.object({
   action: z.literal('set'),
   set: SetParam
-})
+});
 
 const Message = z.discriminatedUnion('action', [
   SetAction
@@ -122,5 +122,8 @@ export function createWsServer(httpServer: http.Server, params: ParamStore) {
 
   params.on('kickDelay', (value) => broadcast({ type: 'update', param: 'kickDelay', value }));
 
-  return server;
+  return {
+    server,
+    broadcast
+  };
 }

@@ -71,6 +71,10 @@ async function main() {
 
   const params = new ParamStore();
 
+  let bpm = 120;
+  let energy = 0.5;
+  let danceability = 0.5;
+
   const animator = new Animator({
     movingHead: {
       main: beamSpot,
@@ -102,7 +106,7 @@ async function main() {
 
   expressApp.set('trust proxy', 1);
 
-  createWsServer(httpServer, params);
+  const { server: socketServer, broadcast } = createWsServer(httpServer, params);
 
   httpServer.listen(httpPort)
 
@@ -114,20 +118,19 @@ async function main() {
     }
   });
 
-  analysis.on('bpm', (bpm) => {
-    console.log('BPM', bpm);
-    animator.bpm = bpm;
+  analysis.on('bpm', (v) => {
+    bpm = v;
+    animator.bpm = v;
   });
 
-    console.log('Danceability', value);
   analysis.on('danceability', (v) => {
     danceability = v;
     animator.danceability = v;
   });
 
   energyDetector.on('energy', (level) => {
+    energy = level;
     animator.energy = level;
-    analysis.energy = level;
   });
 
   const kicks: number[] = [];
@@ -148,6 +151,15 @@ async function main() {
       animator.kick();
     }
   }, 1000 / 120);
+
+  setInterval(() => {
+    broadcast({
+      type: 'stats',
+      bpm,
+      danceability,
+      energy
+    });
+  }, 1000 / 10)
 }
 
 main();
