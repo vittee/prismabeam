@@ -450,11 +450,11 @@ export class Animator {
     this.#energy = value;
   }
 
-  get dancability() {
+  get danceability() {
     return this.#dance;
   }
 
-  set dancability(value: number) {
+  set danceability(value: number) {
     if (this.#dance === value) {
       return;
     }

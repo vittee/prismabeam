@@ -119,9 +119,10 @@ async function main() {
     animator.bpm = bpm;
   });
 
-  analysis.on('danceability', (value) => {
     console.log('Danceability', value);
-    animator.dancability = value;
+  analysis.on('danceability', (v) => {
+    danceability = v;
+    animator.danceability = v;
   });
 
   energyDetector.on('energy', (level) => {
