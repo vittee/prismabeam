@@ -5,6 +5,8 @@ import { median } from '../../utils/math';
 /**
  * Tracks kick timestamps and estimates BPM from inter-kick intervals.
  * Emits a stable BPM once enough kicks have been observed.
+ *
+ * @deprecated
  */
 export class KickBpmTracker {
   #timestamps: number[] = [];

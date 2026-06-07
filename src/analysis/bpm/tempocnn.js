@@ -2,17 +2,14 @@
 'use strict';
 
 const path = require('path');
-const { TypedEmitter } = require('tiny-typed-emitter');
 // @ts-ignore
 const { Essentia, EssentiaWASM } = require('essentia.js');
-const { median } = require('../../utils/math');
-const { foldBpm, tempoDirection, correctHarmonicError } = require('../../utils/bpm');
+const { BpmEstimator } = require('./bpm-estimator');
 
 // TempoCNN: output [batch, 256] softmax, classes span 30–286 BPM linearly
 // bpm(i) = 30 + i * (286 - 30) / 255
 const BPM_CLASSES = 256;
 const BPM_CLASS_MIN = 30;
-const BPM_CLASS_MAX = 286;
 
 // TempoCNN mel params — model trained at 11025 Hz
 const SAMPLE_RATE = 11025;
@@ -23,14 +20,14 @@ const PATCH_SIZE = 256;
 const INFER_EVERY = 64; // run inference every N new mel frames (~3s at 11025Hz)
 
 /**
- * @extends {TypedEmitter<BpmDetectorEvents>}
+ * @extends {BpmEstimator}
  */
-class TempoCNNBpmDetector extends TypedEmitter {
+class TempoCNNBpmDetector extends BpmEstimator {
   /** @type {any} */ #tf;
   /** @type {any} */ #model = null;
   /** @type {import('essentia.js/dist/core_api').default} */ #essentia;
 
-  // Ring buffer for incoming mono samples at 16000 Hz
+  // Ring buffer for incoming mono samples at 11025 Hz
   #ringBuffer = new Float32Array(FRAME_SIZE + HOP_SIZE * PATCH_SIZE * 2);
   #writePos = 0;
   #sampleCount = 0;
@@ -40,15 +37,8 @@ class TempoCNNBpmDetector extends TypedEmitter {
   #melFrames = [];
 
   #framesSinceLastInfer = 0;
-  #lastRawBpm = 0;
-  #tempoDir = 0;
-
-  // Smoothed BPM history
-  /** @type {number[]} */ #bpmHistory = [];
-  #historySize = 8;
 
   /** @type {string} */ #modelPath;
-
   /** @type {number} */ #inputSampleRate;
 
   /**
@@ -69,39 +59,17 @@ class TempoCNNBpmDetector extends TypedEmitter {
   }
 
   /**
-   * @param {number} energy 0–1
-   * @param {number} dance  0–1
-   */
-  setContext(energy, dance) {
-    this.#tempoDir = tempoDirection(energy, dance);
-  }
-
-  /** @param {number} kickBpm */
-  /** @param {number} kickBpm */
-  applyKickBpm(kickBpm) {
-    if (!isFinite(kickBpm) || kickBpm <= 0 || this.#bpmHistory.length < 4) return;
-    const current = median(this.#bpmHistory);
-    const corrected = correctHarmonicError(current, kickBpm, this.#tempoDir);
-    if (corrected !== current) {
-      this.#bpmHistory = [corrected];
-      this.#lastRawBpm = corrected;
-    }
-  }
-
-  /**
-   * Process stereo interleaved float32 PCM buffer (2 ch at 16000 Hz).
+   * Process stereo interleaved float32 PCM buffer (2 ch at inputSampleRate).
    * @param {Buffer} buffer
    */
   process(buffer) {
     const inputSamples = buffer.length / 4 / 2;
 
-    // Downmix to mono
     const mono = new Float32Array(inputSamples);
     for (let i = 0; i < inputSamples; i++) {
       mono[i] = (buffer.readFloatLE(i * 8) + buffer.readFloatLE(i * 8 + 4)) * 0.5;
     }
 
-    // Resample to 11025 Hz
     let resampled;
     if (this.#inputSampleRate !== SAMPLE_RATE) {
       const vec = this.#essentia.arrayToVector(mono);
@@ -121,7 +89,6 @@ class TempoCNNBpmDetector extends TypedEmitter {
       this.#sampleCount++;
     }
 
-    // Extract mel frames whenever we have enough samples
     while (this.#sampleCount >= FRAME_SIZE) {
       this.#extractMelFrame();
       this.#sampleCount -= HOP_SIZE;
@@ -130,7 +97,6 @@ class TempoCNNBpmDetector extends TypedEmitter {
       if (this.#framesSinceLastInfer >= INFER_EVERY && this.#melFrames.length >= INFER_EVERY) {
         this.#framesSinceLastInfer = 0;
         this.#runInference();
-        // Keep up to PATCH_SIZE frames for context, drop oldest beyond that
         if (this.#melFrames.length > PATCH_SIZE) {
           this.#melFrames.splice(0, this.#melFrames.length - PATCH_SIZE);
         }
@@ -139,7 +105,6 @@ class TempoCNNBpmDetector extends TypedEmitter {
   }
 
   #extractMelFrame() {
-    // Read FRAME_SIZE samples from ring buffer (oldest samples first)
     const ringLen = this.#ringBuffer.length;
     const startPos = (this.#writePos - this.#sampleCount + ringLen * 2) % ringLen;
 
@@ -162,15 +127,15 @@ class TempoCNNBpmDetector extends TypedEmitter {
       const spectrum = this.#essentia.Spectrum(windowed.frame, FRAME_SIZE);
       const melResult = this.#essentia.MelBands(
         spectrum.spectrum,
-        5000,               // highFrequencyBound (from essentia source)
+        5000,               // highFrequencyBound
         FRAME_SIZE / 2 + 1, // inputSize = spectrum bins
         false,              // log
-        20,                 // lowFrequencyBound (from essentia source)
+        20,                 // lowFrequencyBound
         'unit_tri',         // normalize
         MEL_BANDS,          // numberBands
         SAMPLE_RATE,        // sampleRate
         'magnitude',        // type
-        'slaneyMel',        // warpingFormula (from essentia source)
+        'slaneyMel',        // warpingFormula
         'warping'           // weighting
       );
       vec.delete();
@@ -217,29 +182,15 @@ class TempoCNNBpmDetector extends TypedEmitter {
       const probs = output.dataSync();
       output.dispose();
 
-      // Argmax: class i = BPM_CLASS_MIN + i (matches essentia TempoCNN source)
       let argmax = 0;
       for (let i = 1; i < BPM_CLASSES; i++) {
         if (probs[i] > probs[argmax]) argmax = i;
       }
 
-      let bpm = BPM_CLASS_MIN + argmax;
-      if (bpm < 60) return; // sub-60 is a detection artifact
+      const bpm = BPM_CLASS_MIN + argmax;
+      if (bpm < 60) return;
 
-      console.log(`[TempoCNN] raw=${bpm.toFixed(1)}`);
-
-      const ref = this.#bpmHistory.length >= 4
-        ? median(this.#bpmHistory)
-        : this.#lastRawBpm > 0
-          ? this.#lastRawBpm
-          : 0;
-      if (ref > 0) bpm = foldBpm(bpm, ref, BPM_CLASS_MIN, BPM_CLASS_MAX);
-      this.#lastRawBpm = bpm;
-
-      this.#bpmHistory.push(bpm);
-      if (this.#bpmHistory.length > this.#historySize) this.#bpmHistory.shift();
-
-      this.emit('bpm', Math.round(median(this.#bpmHistory)));
+      this._submitBpm(bpm);
     }).catch((/** @type {unknown} */ e) => {
       tensor.dispose();
       console.error('[BpmDetectorTempoCNN] inference failed:', e);
@@ -247,4 +198,4 @@ class TempoCNNBpmDetector extends TypedEmitter {
   }
 }
 
-module.exports = { BpmDetectorTempoCNN: TempoCNNBpmDetector };
+module.exports = { TempoCNNBpmDetector };

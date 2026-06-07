@@ -1,41 +1,27 @@
 // @ts-check
 'use strict';
 
-const { TypedEmitter } = require('tiny-typed-emitter');
 // @ts-ignore
 const { Essentia, EssentiaWASM } = require('essentia.js');
-const { median } = require('../../utils/math');
-const { foldBpm, tempoDirection, correctHarmonicError } = require('../../utils/bpm');
+const { BpmEstimator } = require('./bpm-estimator');
 
 /**
- * @extends {TypedEmitter<BpmDetectorEvents>}
+ * @extends {BpmEstimator}
  */
-class RhythmBpmDetector extends TypedEmitter {
+class RhythmBpmDetector extends BpmEstimator {
   /** @type {import('essentia.js/dist/core_api').default} */
   #essentia;
-
-  /** @type {number} */
-  #inputSampleRate;
-  /** @type {number} */
-  #sampleRate;
-  /** @type {number} */
-  #windowSamples;
-  /** @type {number} */
-  #hopSamples;
-  /** @type {Float32Array} */
-  #buffer;
+  /** @type {number} */ #inputSampleRate;
+  /** @type {number} */ #sampleRate;
+  /** @type {number} */ #windowSamples;
+  /** @type {number} */ #hopSamples;
+  /** @type {Float32Array} */ #buffer;
   #writePos = 0;
   #bufferFilled = false;
   #samplesSinceLastHop = 0;
 
-  /** @type {number[]} */
-  #bpmHistory = [];
-  #historySize = 8;
-  #lastRawBpm = 0;
-  #tempoDir = 0;
-
   /**
-   * @param {number} [inputSampleRate] sample rate of incoming PCM (e.g. 48000)
+   * @param {number} [inputSampleRate]
    * @param {number} [windowSeconds]
    * @param {number} [hopSeconds]
    */
@@ -49,37 +35,15 @@ class RhythmBpmDetector extends TypedEmitter {
     this.#essentia = new Essentia(EssentiaWASM);
   }
 
-  /**
-   * @param {number} energy 0–1
-   * @param {number} dance  0–1
-   */
-  setContext(energy, dance) {
-    this.#tempoDir = tempoDirection(energy, dance);
-  }
-
-  /** @param {number} kickBpm */
-  /** @param {number} kickBpm */
-  applyKickBpm(kickBpm) {
-    if (!isFinite(kickBpm) || kickBpm <= 0 || this.#bpmHistory.length < 4) return;
-    const current = median(this.#bpmHistory);
-    const corrected = correctHarmonicError(current, kickBpm, this.#tempoDir);
-    if (corrected !== current) {
-      this.#bpmHistory = [corrected];
-      this.#lastRawBpm = corrected;
-    }
-  }
-
   /** @param {Buffer} buffer */
   process(buffer) {
     const inputSamples = buffer.length / 4 / 2;
 
-    // Downmix to mono
     const mono = new Float32Array(inputSamples);
     for (let i = 0; i < inputSamples; i++) {
       mono[i] = (buffer.readFloatLE(i * 8) + buffer.readFloatLE(i * 8 + 4)) * 0.5;
     }
 
-    // Resample to 44100 Hz if needed
     let resampled;
     if (this.#inputSampleRate !== this.#sampleRate) {
       const vec = this.#essentia.arrayToVector(mono);
@@ -135,36 +99,16 @@ class RhythmBpmDetector extends TypedEmitter {
       const vec = this.#essentia.arrayToVector(linear);
       const result = this.#essentia.RhythmExtractor2013(vec, 208, 'multifeature', 40);
       vec.delete();
-
-      if (result?.bpm != null) {
-        let bpm = result.bpm;
-        if (isFinite(bpm) && bpm >= 60 && bpm <= 220) {
-          const ref = this.#bpmHistory.length >= 4
-            ? median(this.#bpmHistory)
-            : this.#lastRawBpm > 0
-              ? this.#lastRawBpm
-              : 0;
-          if (ref > 0) bpm = foldBpm(bpm, ref);
-          this.#lastRawBpm = bpm;
-          this.#bpmHistory.push(bpm);
-          if (this.#bpmHistory.length > this.#historySize) this.#bpmHistory.shift();
-          this.emit('bpm', Math.round(median(this.#bpmHistory)));
-        }
-      }
-    } catch {
-    }
+      if (result?.bpm != null) this._submitBpm(result.bpm);
+    } catch {}
 
     try {
       const vec = this.#essentia.arrayToVector(linear);
       const result = this.#essentia.Danceability(vec, 8800, 310, this.#sampleRate, 1.1);
       vec.delete();
-
-      if (result != null) {
-        this.emit('danceability', Math.min(1, result.danceability / 3));
-      }
-    } catch {
-    }
+      if (result != null) this._submitDanceability(Math.min(1, result.danceability / 3));
+    } catch {}
   }
 }
 
-module.exports = { BpmDetectorRhythm: RhythmBpmDetector };
+module.exports = { RhythmBpmDetector };
