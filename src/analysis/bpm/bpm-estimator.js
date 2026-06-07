@@ -33,7 +33,7 @@ class BpmEstimator extends TypedEmitter {
     const directlyConsistent = prevDetected <= 0 || Math.abs(bpm - prevDetected) / prevDetected < 0.2;
     const ref = directlyConsistent && histRef > 0 ? histRef : prevDetected > 0 ? prevDetected : 0;
     this.#lastDetected = bpm;
-    if (ref > 0) bpm = foldBpm(bpm, ref);
+    bpm = foldBpm(bpm, ref);
 
     // Outlier rejection: single bad readings don't corrupt stable history
     const isOutlier = histRef > 0 && this.#history.length >= 6 && Math.abs(bpm - histRef) / histRef > 0.2;

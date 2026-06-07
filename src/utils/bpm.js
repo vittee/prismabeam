@@ -19,16 +19,11 @@
 function foldBpm(bpm, ref, min = 40, max = 220) {
   const ratios = [0.5, 2, 1/3, 3];
 
-  // No history: apply range bias toward 90–160 sweet spot.
-  // Percival's autocorrelation commonly returns 2× for slow songs (70 BPM → 140)
-  // and ½× for fast songs (160 BPM → 80). Only fold when it produces a strictly
-  // better landing (closer to centre 120) — avoids moving genuinely moderate tempos.
+  const SWEET_MIN = 90;
+  const SWEET_MAX = 160;
+  const CENTRE = 120;
   if (ref <= 0) {
-    const SWEET_MIN = 90;
-    const SWEET_MAX = 160;
-    const CENTRE = 120;
-    const inSweet = bpm >= SWEET_MIN && bpm <= SWEET_MAX;
-    if (!inSweet) {
+    if (bpm < SWEET_MIN || bpm > SWEET_MAX) {
       let bestCandidate = bpm;
       let bestDist = Math.abs(bpm - CENTRE);
       for (const r of ratios) {

@@ -79,7 +79,11 @@ class PercivalBpmDetector extends BpmEstimator {
         vec, 1024, 2048, 128, 256, 210, 50, this.#sampleRate
       );
       vec.delete();
-      if (result?.bpm != null) this._submitBpm(result.bpm);
+
+      if (result?.bpm != null) {
+        const meter = this.#detectMeter(linear, result.bpm);
+        this._submitBpm(this.#correctMeter(result.bpm, meter));
+      }
     } catch {}
 
     try {
@@ -89,6 +93,78 @@ class PercivalBpmDetector extends BpmEstimator {
       if (result != null) this._submitDanceability(Math.min(1, result.danceability / 3));
     } catch {}
   }
+
+  /**
+   * Synthesises beat positions from bpm, runs BeatsLoudness → Beatogram → Meter.
+   * Returns detected meter integer, or 4 on failure.
+   *
+   * @param {Float32Array} signal
+   * @param {number} bpm
+   * @returns {number}
+   */
+  #detectMeter(signal, bpm) {
+    if (bpm <= 0) return 4;
+    const windowDuration = signal.length / this.#sampleRate;
+    const beatInterval = 60 / bpm;
+
+    const beats = [];
+    for (let t = beatInterval; t < windowDuration - beatInterval; t += beatInterval) {
+      beats.push(t);
+    }
+    if (beats.length < 4) return 4;
+
+    try {
+      const sigVec = this.#essentia.arrayToVector(signal);
+      const beatsVec = this.#essentia.arrayToVector(new Float32Array(beats));
+      const blResult = this.#essentia.BeatsLoudness(
+        sigVec, 0.05, 0.1, beatsVec, [20, 150, 400, 3200, 7000, 22000], this.#sampleRate
+      );
+      sigVec.delete();
+      beatsVec.delete();
+
+      const bgResult = this.#essentia.Beatogram(blResult.loudness, blResult.loudnessBandRatio, 16);
+      const meterResult = this.#essentia.Meter(bgResult.beatogram);
+      return typeof meterResult.meter === 'number' ? Math.round(meterResult.meter) : 4;
+    } catch {
+      return 4;
+    }
+  }
+
+  /**
+   * Adjusts BPM based on detected meter to handle 3/4 and 6/8 misreads.
+   * - meter=3: Percival may have counted every beat as 4/4 → try ×(3/4)
+   * - meter=6: compound duple, beat unit is dotted quarter → try ×(2/3) or ×(3/2)
+   * Keeps correction within 50–210 BPM range.
+   *
+   * @param {number} bpm
+   * @param {number} meter
+   * @returns {number}
+   */
+  #correctMeter(bpm, meter) {
+    /** @type {number[]} */
+    let candidates;
+    if (meter === 3) {
+      candidates = [bpm * (3 / 4), bpm * (4 / 3)];
+    } else if (meter === 6) {
+      candidates = [bpm * (2 / 3), bpm * (3 / 2)];
+    } else {
+      return bpm;
+    }
+
+    // Pick candidate closest to sweet spot (90–160) that's in range
+    const SWEET_MIN = 90, SWEET_MAX = 160;
+    const inRange = candidates.filter(b => b >= 50 && b <= 210);
+    if (inRange.length === 0) return bpm;
+
+    const inSweet = inRange.filter(b => b >= SWEET_MIN && b <= SWEET_MAX);
+    if (inSweet.length > 0) return inSweet[0];
+
+    // bpm itself already in sweet spot — no correction needed
+    if (bpm >= SWEET_MIN && bpm <= SWEET_MAX) return bpm;
+
+    return inRange[0];
+  }
+
 }
 
 module.exports = { PercivalBpmDetector };
