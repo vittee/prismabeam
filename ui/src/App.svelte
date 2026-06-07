@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
   import Fader from "./components/Fader.svelte";
   import Knob from "./components/Knob.svelte";
+  import MiniChart from "./components/MiniChart.svelte";
   import ToggleButton from "./components/ToggleButton.svelte";
 
   type Light = {
@@ -19,7 +20,7 @@
     kickDelay: number;
   };
 
-  let s = $state<State>({
+  let _state = $state<State>({
     head: { luminosity: 1, enabled: true, tiltOffset: 0 },
     mini: { luminosity: 1, enabled: true, tiltOffset: 0 },
     par: { luminosity: 1, enabled: true },
@@ -27,6 +28,10 @@
   });
 
   let connected = $state(false);
+
+  let bpmPoints = $state<number[]>([]);
+  let danceabilityPoints = $state<number[]>([]);
+  let energyPoints = $state<number[]>([]);
 
   const websocketUrl = location.protocol.replace('http', 'ws') + '//' + location.host + '/ws';
   let ws: WebSocket;
@@ -36,6 +41,9 @@
 
     ws.onopen = () => {
       connected = true;
+      bpmPoints = [];
+      danceabilityPoints = [];
+      energyPoints = [];
     };
 
     ws.onclose = () => {
@@ -46,16 +54,34 @@
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
 
-      if (msg.type === "state") {
-        s = msg.state;
-      } else if (msg.type === "update") {
-        let o = s as any;
+      switch (msg.type) {
+        case 'state':
+          _state = msg.state;
+          break;
 
-        if (msg.key !== undefined) {
-          o = o[msg.key]
+        case 'update': {
+          let o = _state as any;
+
+          if (msg.key !== undefined) {
+            o = o[msg.key]
+          }
+
+          o[msg.param] = msg.value;
         }
 
-        o[msg.param] = msg.value;
+        case 'stats': {
+          const { bpm, danceability, energy } = msg;
+
+          const append = (a: number[], v: number | undefined) => {
+            if (!v) return;
+            a.push(v);
+            if (a.length > 50) a.shift();
+          }
+
+          append(bpmPoints, bpm);
+          append(danceabilityPoints, danceability);
+          append(energyPoints, energy);
+        }
       }
     };
   }
@@ -73,19 +99,73 @@
 
 <main>
   <div class="container">
-    <section class="top">
-      <div class="status" class:connected>
-        {connected ? "Connected" : "Connecting…"}
-      </div>
-    </section>
-
     <section class="fixtures">
+      <div class="strip">
+        <div class="label">Ctrls</div>
+        <div class="toggle">
+          <ToggleButton
+            size="1.5em"
+            color="red"
+            active={connected}
+          />
+          <div class="hint">{connected ? 'Connected' : 'Connecting...'}</div>
+        </div>
+
+        <div class="knob">
+          <Knob
+            unitValue={_state.kickDelay / 1000}
+            initialValue={420 / 1000}
+            onchange={(v) => {
+              _state.kickDelay = Math.round(v * 1000);
+              ws.send(JSON.stringify({ action: "set", set: { param: "kickDelay", value: _state.kickDelay } }));
+            }}
+            color="red"
+          />
+          <div class="hint">{_state.kickDelay} ms</div>
+          <div class="hint">Kick Delay</div>
+        </div>
+
+        <div>
+          <div class="chart">
+            <MiniChart
+              color="#55ffff"
+              data={bpmPoints}
+              points={50}
+              min={40}
+              max={250}
+              format={v => `BPM: ${v.toFixed(0)}`}
+            />
+          </div>
+
+          <div class="chart">
+            <MiniChart
+              color="#ffff00"
+              data={danceabilityPoints}
+              points={50} min={0}
+              max={1.5}
+              format={v => `Dance: ${(v * 100).toFixed(2)}%`}
+            />
+          </div>
+
+          <div class="chart">
+            <MiniChart
+              color="#ff8800"
+              data={energyPoints}
+              points={50}
+              min={0}
+              max={1.5}
+              format={v => `Energy: ${(v * 100).toFixed(2)}%`}
+            />
+          </div>
+        </div>
+      </div>
+
       {#each [["head", "Main"], ["mini", "Mini"], ["par", "Par"]] as [key, label]}
-        {@const fixture = (s as any)[key]}
+        {@const fixture = (_state as any)[key]}
         <div class="strip">
           <div class="label">{label}</div>
 
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35em">
+          <div class="toggle">
             <ToggleButton
               size="1.5em"
               color="green"
@@ -134,23 +214,6 @@
           </div>
         </div>
       {/each}
-
-      <div class="strip">
-        <div class="label">Adj</div>
-        <div class="knob">
-          <Knob
-            unitValue={s.kickDelay / 1000}
-            initialValue={420 / 1000}
-            onchange={(v) => {
-              s.kickDelay = Math.round(v * 1000);
-              ws.send(JSON.stringify({ action: "set", set: { param: "kickDelay", value: s.kickDelay } }));
-            }}
-            color="red"
-          />
-          <div class="hint">{s.kickDelay} ms</div>
-          <div class="hint">Kick Delay</div>
-        </div>
-      </div>
     </section>
   </div>
 </main>
@@ -175,12 +238,36 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.4em;
+  }
+
+  .toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35em;
+  }
+
+  .charts {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    gap: 1px;
+  }
+
+  .chart {
+    width: 4em;
+    height: 2em;
   }
 
   .status {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-bottom: 1.2em;
     font-size: 0.7em;
     color: #f55;
-    margin-bottom: 1.2em;
   }
 
   .status.connected {
