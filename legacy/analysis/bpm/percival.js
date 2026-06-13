@@ -90,7 +90,10 @@ class PercivalBpmDetector extends BpmEstimator {
       let vec = this.#essentia.arrayToVector(linear);
       const result = this.#essentia.Danceability(vec, 8800, 310, this.#sampleRate, 1.1);
       vec.delete();
-      if (result != null) this._submitDanceability(Math.min(1, result.danceability / 3));
+      if (result != null) {
+        result.dfa?.delete();
+        this._submitDanceability(Math.min(1, result.danceability / 3));
+      }
     } catch {}
   }
 
@@ -123,7 +126,10 @@ class PercivalBpmDetector extends BpmEstimator {
       beatsVec.delete();
 
       const bgResult = this.#essentia.Beatogram(blResult.loudness, blResult.loudnessBandRatio, 16);
+      blResult.loudness.delete();
+      blResult.loudnessBandRatio.delete();
       const meterResult = this.#essentia.Meter(bgResult.beatogram);
+      bgResult.beatogram.delete();
       return typeof meterResult.meter === 'number' ? Math.round(meterResult.meter) : 4;
     } catch {
       return 4;

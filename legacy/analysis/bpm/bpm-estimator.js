@@ -2,8 +2,8 @@
 'use strict';
 
 const { TypedEmitter } = require('tiny-typed-emitter');
-const { median } = require('../../utils/math');
-const { foldBpm } = require('../../utils/bpm');
+const { median } = require('../../../src/utils/math');
+const { foldBpm } = require('../../../src/utils/bpm');
 
 /**
  * Shared BPM smoothing and outlier rejection.

@@ -1,5 +1,4 @@
-import dgram from 'node:dgram';
-import path from 'node:path';
+import { extname } from 'node:path';
 import http from 'node:http';
 import express from 'express';
 import { SerialPort } from 'serialport';
@@ -10,8 +9,7 @@ import { Fixture } from './fixtures/fixture';
 import { YUERGenericBeamSpot } from './fixtures/moving-head/yeur';
 import { Mini30WMovingHeadPrismGoboWithLaser } from './fixtures/moving-head/mini';
 import { TADAMK54Rgb } from './fixtures/par/tadamk54';
-import { AnalysisManager } from './analysis/analysis-manager';
-import { EnergyDetector } from './analysis/energy/energy-detector';
+import { AnalysisClient } from './analysis/analysis-client';
 import { Animator } from './animator';
 import { ParamStore } from './params';
 import { createWsServer } from './server';
@@ -47,8 +45,6 @@ async function main() {
   console.log('Found device:', device.path);
 
   const httpPort = +(process.env.PORT || 7400);
-  const taggingPort = +(process.env.TAGGING_PORT || 7440);
-  const audioPort = +(process.env.AUDIO_PORT || 7441);
 
   const dmx = new DMX(device.path);
   const universe = new Universe(dmx);
@@ -64,10 +60,8 @@ async function main() {
 
   await dmx.open();
 
-  const analysis = new AnalysisManager('file://./models/musicnn/model.json', path.resolve('models/tempocnn/deeptemp-k4-3'));
+  const analysis = new AnalysisClient(process.env.ANALYZER_HOST || '127.0.0.1', +(process.env.ANALYZER_PORT || 7442));
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
-
-  const energyDetector = new EnergyDetector(48000);
 
   const params = new ParamStore();
 
@@ -84,23 +78,6 @@ async function main() {
     params
   });
 
-  const taggingSocket = dgram.createSocket('udp4');
-  const audioSocket = dgram.createSocket('udp4');
-
-  taggingSocket.on('message', (data) =>{
-    analysis.processMl(data)
-  });
-
-  audioSocket.on('message', (data) => {
-    analysis.processRhythm(data);
-    energyDetector.process(data);
-  });
-
-  await Promise.all([
-    new Promise<void>(resolve => taggingSocket.bind(taggingPort, resolve)),
-    new Promise<void>(resolve => audioSocket.bind(audioPort, resolve))
-  ]);
-
   const expressApp = express();
   const httpServer = http.createServer(expressApp);
 
@@ -110,12 +87,34 @@ async function main() {
 
   httpServer.listen(httpPort)
 
-  console.log(`Listening — http:${httpPort} audio:${audioPort} audio-tagging:${taggingPort}`);
+  console.log(`Listening — http:${httpPort}`);
 
-  analysis.on('extracted', ([topTag]) => {
-    if (topTag?.score) {
-      animator.updateTag(topTag);
+  const uiRoot = process.env.NODE_ENV === 'development' ? './ui/dist' : './ui';
+
+  expressApp.use('/', express.static(uiRoot), (req, res, next) => {
+    const ext = extname(req.path);
+
+    if (!ext) {
+      res.sendFile('index.html', { root: uiRoot, dotfiles: 'deny' }, (error) => {
+        if (error) {
+          res.status(404).end();
+        }
+      });
+
+      return;
     }
+
+    next();
+  });
+
+  analysis.on('extracted', (tags) => {
+    console.log('extracted', tags);
+    if (tags.length) animator.updateGenre(tags);
+  });
+
+  analysis.on('mood', (tags) => {
+    console.log('mood', tags);
+    if (tags.length) animator.updateMood(tags);
   });
 
   analysis.on('bpm', (v) => {
@@ -128,14 +127,14 @@ async function main() {
     animator.danceability = v;
   });
 
-  energyDetector.on('energy', (level) => {
+  analysis.on('energy', (level) => {
     energy = level;
     animator.energy = level;
   });
 
   const kicks: number[] = [];
 
-  energyDetector.on('kick', () => {
+  analysis.on('kick', () => {
     kicks.push(Date.now());
     if (kicks.length > 8) {
       kicks.shift();

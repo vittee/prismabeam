@@ -79,6 +79,7 @@ class TempoCNNBpmDetector extends BpmEstimator {
       const result = this.#essentia.ResampleFFT(vec, inSize, outSize);
       vec.delete();
       resampled = this.#essentia.vectorToArray(result.output);
+      result.output.delete();
     } else {
       resampled = mono;
     }
@@ -139,11 +140,14 @@ class TempoCNNBpmDetector extends BpmEstimator {
         'warping'           // weighting
       );
       vec.delete();
+      windowed.frame.delete();
+      spectrum.spectrum.delete();
 
       const bands = new Float32Array(MEL_BANDS);
       for (let i = 0; i < MEL_BANDS; i++) {
         bands[i] = melResult.bands.get(i);
       }
+      melResult.bands.delete();
 
       this.#melFrames.push(bands);
     } catch {

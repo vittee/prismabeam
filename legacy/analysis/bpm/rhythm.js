@@ -53,6 +53,7 @@ class RhythmBpmDetector extends BpmEstimator {
       const result = this.#essentia.ResampleFFT(vec, inSize, outSize);
       vec.delete();
       resampled = this.#essentia.vectorToArray(result.output);
+      result.output.delete();
     } else {
       resampled = mono;
     }
@@ -99,6 +100,9 @@ class RhythmBpmDetector extends BpmEstimator {
       const vec = this.#essentia.arrayToVector(linear);
       const result = this.#essentia.RhythmExtractor2013(vec, 208, 'multifeature', 40);
       vec.delete();
+      result.ticks?.delete();
+      result.estimates?.delete();
+      result.bpmIntervals?.delete();
       if (result?.bpm != null) this._submitBpm(result.bpm);
     } catch {}
 
@@ -106,7 +110,10 @@ class RhythmBpmDetector extends BpmEstimator {
       const vec = this.#essentia.arrayToVector(linear);
       const result = this.#essentia.Danceability(vec, 8800, 310, this.#sampleRate, 1.1);
       vec.delete();
-      if (result != null) this._submitDanceability(Math.min(1, result.danceability / 3));
+      if (result != null) {
+        result.dfa?.delete();
+        this._submitDanceability(Math.min(1, result.danceability / 3));
+      }
     } catch {}
   }
 }

@@ -1,7 +1,7 @@
 // @ts-check
 'use strict';
 
-const { median } = require('../../utils/math');
+const { median } = require('../../../src/utils/math');
 const { tagLabels } = require('../labels');
 
 class ActivationSmoother {

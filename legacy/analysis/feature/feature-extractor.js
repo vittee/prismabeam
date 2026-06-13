@@ -3,8 +3,9 @@
 
 const { TypedEmitter } = require('tiny-typed-emitter');
 const { chain, min, max } = require('lodash');
-// @ts-ignore
 const { EssentiaModel, EssentiaWASM } = require('essentia.js');
+
+/** @typedef {import('essentia.js').EssentiaTFInputExtractorPrivate} EssentiaTFInputExtractorPrivate */
 
 const { RingBuffer } = require('../ringbuffer');
 const { PatchHop } = require('../patch-hop');
@@ -12,7 +13,7 @@ const { ActivationSmoother } = require('./activation-smoother');
 const { tagLabels } = require('../labels');
 
 /**
- * @typedef {import('../analysis-manager').ActivationTag} ActivationTag
+ * @typedef {import('../../../src/analysis/analysis-client').ActivationTag} ActivationTag
  */
 
 /**
@@ -56,7 +57,7 @@ class FeatureExtractor extends TypedEmitter {
   #activationSmoother = new ActivationSmoother(8);
 
   #features = {
-    melSpectrum: /** @type {number[][]} */ (Array(128).fill(Array(96).fill(0))),
+    melSpectrum: /** @type {Float32Array[]} */ (Array(128).fill(Array(96).fill(0))),
     frameSize: 128,
     melBandsSize: 96,
     patchSize: 128,
@@ -72,6 +73,23 @@ class FeatureExtractor extends TypedEmitter {
     this.#frameRingBuffer = new RingBuffer(this.#frameSize * 64, this.#channelCount);
     this.#hopData = Array(this.#channelCount).fill(new Float32Array(this.#hopSize));
     this.#frameData = Array(this.#channelCount).fill(new Float32Array(this.#frameSize));
+  }
+
+  /**
+   * @param {Float32Array} frame
+   */
+  #computeMelSpectrum(frame) {
+    // Call essentia internals directly to control WASM object lifecycle.
+    // EssentiaTFInputExtractor.compute() leaks both the input VectorFloat and
+    // the output struct on every call — here we delete them explicitly.
+    const essentiaJS = this.#extractor.essentia;
+    const mod = (/** @type {EssentiaTFInputExtractorPrivate} */(/** @type {unknown} */(this.#extractor))).module;
+    const frameVec = mod.arrayToVector(frame);
+    const result = essentiaJS.TensorflowInputMusiCNN(frameVec);
+    const melSpectrum = mod.vectorToArray(result.bands);
+    frameVec.delete();
+    result.bands.delete();
+    return melSpectrum;
   }
 
   /** @param {Buffer} buffer */
@@ -95,11 +113,9 @@ class FeatureExtractor extends TypedEmitter {
       const rms = Math.sqrt(frame.reduce((s, x) => s + x * x, 0) / frame.length);
 
       if (rms > 1e-6) {
-        const computed = this.#extractor.compute(frame);
-        /** @ts-ignore */
-        this.#features.melSpectrum.push(computed.melSpectrum);
+        this.#features.melSpectrum.push(this.#computeMelSpectrum(frame));
       } else {
-        this.#features.melSpectrum.push(Array(96).fill(0));
+        this.#features.melSpectrum.push(new Float32Array(96));
       }
 
       this.#features.melSpectrum.shift();
