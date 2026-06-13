@@ -26,12 +26,13 @@ export type MiniVariant = {
   laser: number;
   starfield?: boolean;
   ledRing: number[];
+  moves: HeadMove[];
 }
 
 export type StrobingConfig = {
   threshold?: number;    // min weight to trigger strobing, default 0.3
   paceWeight?: number;   // BPM contribution (0–1), default 0.4
-  energyWeight?: number; // energy contribution (0–1), default 0.6
+  energyWeight: number; // energy contribution (0–1), default 0.6
   danceExp?: number;     // exponent on danceability gate, default 2
 }
 

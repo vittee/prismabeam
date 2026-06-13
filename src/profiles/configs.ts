@@ -1,8 +1,89 @@
-import { Profile } from "./types";
+﻿import { Profile } from "./types";
 import { easeInExpo, easeInOutSine, easeInSine } from "../utils/easing";
 
 export const ProfileConfigs: Record<string, Profile> = {
-// Full brightness, fast motor. Aggressive cyan/magenta/blue cycling at 300ms steps.
+  // High brightness, fun saturated colors, medium-fast motor. 400ms PAR cycling. Lively sine sweeps.
+  // Prism on, gobo spinning. Upbeat floor-filler — more colorful and accessible than electronic/house.
+  dance: {
+    luminous: { head: 240, mini: 255, par: 195 },
+    strobing: { threshold: 0.18, paceWeight: 0.32, energyWeight: 0.68, danceExp: 0.9 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 0, 200], duration: 400 },
+            { rgbw: [0, 220, 255], duration: 400 },
+            { rgbw: [255, 220, 0], duration: 400 },
+            { rgbw: [0, 255, 100], duration: 400 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 100, 0], duration: 400 },
+            { rgbw: [0, 100, 255], duration: 400 },
+            { rgbw: [200, 0, 255], duration: 400 },
+            { rgbw: [0, 255, 180], duration: 400 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 50, 150], duration: 400 },
+            { rgbw: [50, 255, 200], duration: 400 },
+            { rgbw: [255, 200, 0], duration: 400 },
+            { rgbw: [100, 50, 255], duration: 400 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [160, 68], duration: 700, easing: easeInOutSine },
+            { axis: [350, 84], duration: 700, easing: easeInOutSine },
+          ],
+          colors: [96, 48], ledRing: [210, 225], gobo: 120,
+        },
+        {
+          moves: [
+            { axis: [120, 64], duration: 650, easing: easeInOutSine },
+            { axis: [275, 90], duration: 650, easing: easeInOutSine },
+            { axis: [420, 70], duration: 650, easing: easeInOutSine },
+            { axis: [160, 74], duration: 650, easing: easeInOutSine },
+          ],
+          colors: [48, 96], ledRing: [220, 235], gobo: 140,
+        },
+        {
+          moves: [
+            { axis: [170, 72], duration: 700, easing: easeInSine },
+            { axis: [340, 88], duration: 700, easing: easeInSine },
+            { axis: [240, 62], duration: 700, easing: easeInSine },
+          ],
+          colors: [96, 64], ledRing: [200, 215], gobo: 100,
+        },
+      ],
+      mini: [
+        { ledRing: [200, 215], gobo: true, beam: 205, laser: 70, moves: [
+          { axis: [270, 35], duration: 700 },
+          { axis: [420, 60], duration: 700 },
+          { axis: [570, 35], duration: 700 },
+          { axis: [420, 15], duration: 700 },
+        ]},
+        { ledRing: [215, 230], gobo: true, beam: 215, laser: 75, moves: [
+          { axis: [315, 35], duration: 650 },
+          { axis: [465, 60], duration: 650 },
+          { axis: [615, 35], duration: 650 },
+          { axis: [465, 15], duration: 650 },
+        ]},
+        { ledRing: [185, 200], gobo: false, beam: 195, laser: 65, moves: [
+          { axis: [240, 35], duration: 750 },
+          { axis: [390, 60], duration: 750 },
+          { axis: [540, 35], duration: 750 },
+          { axis: [390, 15], duration: 750 },
+        ]},
+      ],
+    },
+  },
+
+  // Full brightness, fast motor. Aggressive cyan/magenta/blue cycling at 300ms steps.
   // Head sweeps wide arcs with sine easing. Gobo spinning, prism on, color wheel mid-range.
   electronic: {
     luminous: { head: 255, mini: 255, par: 200 },
@@ -67,15 +148,24 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [200, 210], gobo: true, beam: 200, laser: 65, starfield: true,
-        },
-        {
-          ledRing: [220, 230], gobo: true, beam: 220, laser: 75, starfield: true,
-        },
-        {
-          ledRing: [190, 210], gobo: false, beam: 180, laser: 60, starfield: true,
-        },
+        { ledRing: [200, 210], gobo: true, beam: 200, laser: 65, moves: [
+          { axis: [290, 35], duration: 650 },
+          { axis: [440, 60], duration: 650 },
+          { axis: [590, 35], duration: 650 },
+          { axis: [440, 15], duration: 650 },
+        ]},
+        { ledRing: [220, 230], gobo: true, beam: 220, laser: 75, moves: [
+          { axis: [250, 35], duration: 600 },
+          { axis: [400, 60], duration: 600 },
+          { axis: [550, 35], duration: 600 },
+          { axis: [400, 15], duration: 600 },
+        ]},
+        { ledRing: [190, 210], gobo: false, beam: 180, laser: 60, moves: [
+          { axis: [320, 35], duration: 700 },
+          { axis: [470, 60], duration: 700 },
+          { axis: [620, 35], duration: 700 },
+          { axis: [470, 15], duration: 700 },
+        ]},
       ],
     },
   },
@@ -125,34 +215,135 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [16, 0], ledRing: [154, 136], gobo: 32,
         },
         {
-          // Center-right (210°) → left (125°) → right (380°), tilt 56→76→90. Starts low-center, snaps low-left, slams high-right.
+          // Center-right (210°) → left (125°) → right (380°) → center (210°). Full pendulum return.
           moves: [
             { axis: [210, 56], duration: 400, easing: easeInExpo },
             { axis: [125, 76], duration: 400, easing: easeInExpo },
             { axis: [380, 90], duration: 400, easing: easeInExpo },
+            { axis: [210, 60], duration: 400, easing: easeInExpo },
           ],
           colors: [16, 80], ledRing: [136, 154], gobo: 16,
         },
         {
-          // Far-left (40°) → extreme-right (465°) → center (255°), tilt 63→78→56. ~425° pan excursion, returns center-low.
+          // Far-left (40°) → extreme-right (465°) → center (255°) → left (80°). Cycle back toward start.
           moves: [
             { axis: [40, 63], duration: 400, easing: easeInExpo },
             { axis: [465, 78], duration: 400, easing: easeInExpo },
             { axis: [255, 56], duration: 400, easing: easeInExpo },
+            { axis: [80, 66], duration: 400, easing: easeInExpo },
           ],
           colors: [0, 16], ledRing: [112, 100], gobo: 48,
         },
       ],
       mini: [
         {
-          ledRing: [180, 200], gobo: true, beam: 200, laser: 55, starfield: true,
+          ledRing: [180, 200], gobo: true, beam: 200, laser: 55,
+          moves: [
+            { axis: [270, 35], duration: 400 },
+            { axis: [420, 60], duration: 400 },
+            { axis: [570, 35], duration: 400 },
+            { axis: [420, 15], duration: 400 },
+          ],
         },
         {
-          ledRing: [160, 180], gobo: true, beam: 220, laser: 70, starfield: true,
+          ledRing: [160, 180], gobo: true, beam: 220, laser: 70,
+          moves: [
+            { axis: [225, 35], duration: 400 },
+            { axis: [375, 60], duration: 400 },
+            { axis: [525, 35], duration: 400 },
+            { axis: [375, 15], duration: 400 },
+          ],
         },
         {
-          ledRing: [210, 230], gobo: false, beam: 190, laser: 60, starfield: true,
+          ledRing: [210, 230], gobo: false, beam: 190, laser: 60,
+          moves: [
+            { axis: [315, 35], duration: 400 },
+            { axis: [465, 60], duration: 400 },
+            { axis: [615, 35], duration: 400 },
+            { axis: [465, 15], duration: 400 },
+          ],
         },
+      ],
+    },
+  },
+
+  // High brightness, fast motor. Orange/white/red PAR at 250ms bursts. Aggressive expo snaps,
+  // wider arcs than rock. Prism on. Harder than rock, not as brutal as metal.
+  'hard rock': {
+    luminous: { head: 240, mini: 255, par: 200 },
+    strobing: { threshold: 0.15, paceWeight: 0.42, energyWeight: 0.58, danceExp: 0.8 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 80, 0], duration: 250 },
+            { rgbw: [255, 255, 255], duration: 100 },
+            { rgbw: [200, 30, 0], duration: 250 },
+            { rgbw: [80, 10, 0], duration: 100 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 0, 0], duration: 200 },
+            { rgbw: [200, 100, 0], duration: 200 },
+            { rgbw: [255, 50, 0], duration: 200 },
+            { rgbw: [60, 0, 0], duration: 100 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 120, 0], duration: 250 },
+            { rgbw: [255, 0, 0], duration: 200 },
+            { rgbw: [150, 60, 0], duration: 150 },
+            { rgbw: [255, 255, 255], duration: 80 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [70, 58], duration: 350, easing: easeInExpo },
+            { axis: [440, 72], duration: 350, easing: easeInExpo },
+          ],
+          colors: [16, 0], ledRing: [160, 180], gobo: 32,
+        },
+        {
+          moves: [
+            { axis: [65, 60], duration: 350, easing: easeInExpo },
+            { axis: [210, 80], duration: 350, easing: easeInExpo },
+            { axis: [430, 65], duration: 350, easing: easeInExpo },
+          ],
+          colors: [0, 16], ledRing: [180, 160], gobo: 48,
+        },
+        {
+          moves: [
+            { axis: [50, 62], duration: 380, easing: easeInExpo },
+            { axis: [455, 75], duration: 380, easing: easeInExpo },
+            { axis: [255, 58], duration: 380, easing: easeInExpo },
+            { axis: [90, 64], duration: 380, easing: easeInExpo },
+          ],
+          colors: [16, 80], ledRing: [200, 220], gobo: 16,
+        },
+      ],
+      mini: [
+        { ledRing: [170, 190], gobo: true, beam: 210, laser: 65, moves: [
+          { axis: [270, 35], duration: 380 },
+          { axis: [420, 60], duration: 380 },
+          { axis: [570, 35], duration: 380 },
+          { axis: [420, 15], duration: 380 },
+        ]},
+        { ledRing: [190, 210], gobo: true, beam: 225, laser: 75, moves: [
+          { axis: [225, 35], duration: 380 },
+          { axis: [375, 60], duration: 380 },
+          { axis: [525, 35], duration: 380 },
+          { axis: [375, 15], duration: 380 },
+        ]},
+        { ledRing: [220, 240], gobo: false, beam: 200, laser: 60, moves: [
+          { axis: [315, 35], duration: 380 },
+          { axis: [465, 60], duration: 380 },
+          { axis: [615, 35], duration: 380 },
+          { axis: [465, 15], duration: 380 },
+        ]},
       ],
     },
   },
@@ -221,15 +412,261 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
+        { ledRing: [40, 30], gobo: true, beam: 170, laser: 60, moves: [
+          { axis: [255, 35], duration: 900 },
+          { axis: [405, 60], duration: 900 },
+          { axis: [555, 35], duration: 900 },
+          { axis: [405, 15], duration: 900 },
+        ]},
+        { ledRing: [50, 40], gobo: true, beam: 190, laser: 65, moves: [
+          { axis: [210, 35], duration: 900 },
+          { axis: [360, 60], duration: 900 },
+          { axis: [510, 35], duration: 900 },
+          { axis: [360, 15], duration: 900 },
+        ]},
+        { ledRing: [20, 10], gobo: true, beam: 150, laser: 55, moves: [
+          { axis: [300, 35], duration: 900 },
+          { axis: [450, 60], duration: 900 },
+          { axis: [600, 35], duration: 900 },
+          { axis: [450, 15], duration: 900 },
+        ]},
+      ],
+    },
+  },
+
+  // Medium-dim cool pastels, slow motor. Soft teal/lavender/rose PAR at 2-3s. Gentle drifting head.
+  // No strobe, no prism. Lounge/downtempo feel — calmer than jazz, warmer than ambient.
+  chill: {
+    luminous: { head: 140, mini: 190, par: 120 },
+    strobing: { threshold: 0.8, paceWeight: 0.15, energyWeight: 0.85, danceExp: 1.8 },
+    variants: {
+      par: [
         {
-          ledRing: [40, 30], gobo: true, beam: 170, laser: 80,
+          colors: [
+            { rgbw: [60, 160, 180], duration: 2500 },
+            { rgbw: [140, 100, 200], duration: 2500 },
+            { rgbw: [80, 180, 160], duration: 2500 },
+          ]
         },
         {
-          ledRing: [50, 40], gobo: true, beam: 190, laser: 80,
+          colors: [
+            { rgbw: [100, 140, 200], duration: 3000 },
+            { rgbw: [180, 100, 160], duration: 3000 },
+            { rgbw: [60, 160, 140], duration: 3000 },
+          ]
         },
         {
-          ledRing: [20, 10], gobo: false, beam: 150, laser: 80,
+          colors: [
+            { rgbw: [120, 180, 220], duration: 3000 },
+            { rgbw: [200, 120, 180], duration: 3000 },
+            { rgbw: [80, 200, 160], duration: 3000 },
+            { rgbw: [160, 140, 220], duration: 3000 },
+          ]
         },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [200, 80], duration: 4000, easing: easeInOutSine },
+            { axis: [300, 68], duration: 4000, easing: easeInOutSine },
+          ],
+          colors: [48, 96], ledRing: [80, 90], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [170, 85], duration: 4500, easing: easeInOutSine },
+            { axis: [320, 70], duration: 4500, easing: easeInOutSine },
+            { axis: [245, 90], duration: 4500, easing: easeInOutSine },
+          ],
+          colors: [96, 48], ledRing: [75, 85], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [185, 78], duration: 5000, easing: easeInOutSine },
+            { axis: [295, 65], duration: 5000, easing: easeInOutSine },
+            { axis: [230, 82], duration: 5000, easing: easeInOutSine },
+            { axis: [275, 72], duration: 5000, easing: easeInOutSine },
+          ],
+          colors: [48, 80], ledRing: [70, 80], gobo: 0,
+        },
+      ],
+      mini: [
+        { ledRing: [60, 70], gobo: true, beam: 100, laser: 30, starfield: true, moves: [
+          { axis: [310, 60], duration: 3500 },
+          { axis: [460, 75], duration: 3500 },
+          { axis: [610, 60], duration: 3500 },
+          { axis: [460, 50], duration: 3500 },
+        ]},
+        { ledRing: [50, 60], gobo: true, beam: 90, laser: 25, starfield: true, moves: [
+          { axis: [270, 60], duration: 4000 },
+          { axis: [420, 75], duration: 4000 },
+          { axis: [570, 60], duration: 4000 },
+          { axis: [420, 50], duration: 4000 },
+        ]},
+        { ledRing: [70, 80], gobo: true, beam: 110, laser: 35, starfield: true, moves: [
+          { axis: [340, 60], duration: 3800 },
+          { axis: [490, 75], duration: 3800 },
+          { axis: [640, 60], duration: 3800 },
+          { axis: [490, 50], duration: 3800 },
+        ]},
+      ],
+    },
+  },
+
+  // Warm soft tones, slow motor. Dusty rose/peach/sage PAR at 3s. Gentle organic drifts.
+  // No laser, no strobe. Acoustic-warm, unhurried — softer and slower than chill.
+  mellow: {
+    luminous: { head: 130, mini: 175, par: 115 },
+    strobing: { threshold: 0.88, paceWeight: 0.12, energyWeight: 0.88, danceExp: 2.0 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [200, 130, 100], duration: 3000 },
+            { rgbw: [160, 180, 120], duration: 3000 },
+            { rgbw: [210, 150, 110], duration: 3000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [180, 120, 80], duration: 3500 },
+            { rgbw: [200, 160, 130], duration: 3500 },
+            { rgbw: [150, 180, 110], duration: 3500 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [220, 150, 120], duration: 3500 },
+            { rgbw: [170, 200, 140], duration: 3500 },
+            { rgbw: [200, 140, 100], duration: 3500 },
+            { rgbw: [160, 190, 130], duration: 3500 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [205, 82], duration: 5000, easing: easeInOutSine },
+            { axis: [310, 70], duration: 5000, easing: easeInOutSine },
+          ],
+          colors: [64, 80], ledRing: [72, 82], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [175, 88], duration: 5500, easing: easeInOutSine },
+            { axis: [315, 72], duration: 5500, easing: easeInOutSine },
+            { axis: [250, 86], duration: 5500, easing: easeInOutSine },
+          ],
+          colors: [80, 64], ledRing: [78, 88], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [190, 80], duration: 6000, easing: easeInOutSine },
+            { axis: [300, 68], duration: 6000, easing: easeInOutSine },
+            { axis: [240, 84], duration: 6000, easing: easeInOutSine },
+            { axis: [280, 74], duration: 6000, easing: easeInOutSine },
+          ],
+          colors: [64, 48], ledRing: [68, 78], gobo: 0,
+        },
+      ],
+      mini: [
+        { ledRing: [40, 50], gobo: true, beam: 90, laser: 22, starfield: true, moves: [
+          { axis: [255, 60], duration: 5000 },
+          { axis: [405, 75], duration: 5000 },
+          { axis: [555, 60], duration: 5000 },
+          { axis: [405, 50], duration: 5000 },
+        ]},
+        { ledRing: [30, 40], gobo: true, beam: 80, laser: 18, starfield: true, moves: [
+          { axis: [210, 60], duration: 5000 },
+          { axis: [360, 75], duration: 5000 },
+          { axis: [510, 60], duration: 5000 },
+          { axis: [360, 50], duration: 5000 },
+        ]},
+        { ledRing: [50, 60], gobo: true, beam: 100, laser: 25, starfield: true, moves: [
+          { axis: [300, 60], duration: 5000 },
+          { axis: [450, 75], duration: 5000 },
+          { axis: [600, 60], duration: 5000 },
+          { axis: [450, 50], duration: 5000 },
+        ]},
+      ],
+    },
+  },
+
+  // Medium-bright warm whites and pastels, slow motor. Cream/peach/sky PAR at 2.5s. Relaxed sweeps.
+  // Light gobo, no strobe. Pleasant, bright lounge feel — warmer and lighter than mellow.
+  'easy listening': {
+    luminous: { head: 170, mini: 210, par: 145 },
+    strobing: { threshold: 0.75, paceWeight: 0.18, energyWeight: 0.82, danceExp: 1.6 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 220, 180, 60], duration: 2500 },
+            { rgbw: [180, 220, 255, 40], duration: 2500 },
+            { rgbw: [255, 200, 160, 50], duration: 2500 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 230, 200, 80], duration: 2500 },
+            { rgbw: [200, 230, 255, 30], duration: 2500 },
+            { rgbw: [255, 210, 180, 60], duration: 2500 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [240, 210, 170, 70], duration: 3000 },
+            { rgbw: [170, 210, 240, 30], duration: 3000 },
+            { rgbw: [255, 230, 210, 80], duration: 3000 },
+            { rgbw: [200, 220, 255, 40], duration: 3000 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [210, 78], duration: 3500, easing: easeInOutSine },
+            { axis: [305, 66], duration: 3500, easing: easeInOutSine },
+          ],
+          colors: [0, 48], ledRing: [88, 96], gobo: 16,
+        },
+        {
+          moves: [
+            { axis: [175, 82], duration: 4000, easing: easeInOutSine },
+            { axis: [325, 68], duration: 4000, easing: easeInOutSine },
+            { axis: [255, 80], duration: 4000, easing: easeInOutSine },
+          ],
+          colors: [48, 0], ledRing: [96, 88], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [195, 76], duration: 4000, easing: easeInOutSine },
+            { axis: [295, 64], duration: 4000, easing: easeInOutSine },
+            { axis: [245, 82], duration: 4000, easing: easeInOutSine },
+            { axis: [270, 72], duration: 4000, easing: easeInOutSine },
+          ],
+          colors: [0, 64], ledRing: [84, 92], gobo: 16,
+        },
+      ],
+      mini: [
+        { ledRing: [70, 80], gobo: true, beam: 120, laser: 35, moves: [
+          { axis: [255, 35], duration: 3500 },
+          { axis: [405, 60], duration: 3500 },
+          { axis: [555, 35], duration: 3500 },
+          { axis: [405, 15], duration: 3500 },
+        ]},
+        { ledRing: [60, 70], gobo: true, beam: 110, laser: 30, moves: [
+          { axis: [210, 35], duration: 3500 },
+          { axis: [360, 60], duration: 3500 },
+          { axis: [510, 35], duration: 3500 },
+          { axis: [360, 15], duration: 3500 },
+        ]},
+        { ledRing: [80, 90], gobo: true, beam: 130, laser: 40, moves: [
+          { axis: [300, 35], duration: 3500 },
+          { axis: [450, 60], duration: 3500 },
+          { axis: [600, 35], duration: 3500 },
+          { axis: [450, 15], duration: 3500 },
+        ]},
       ],
     },
   },
@@ -297,15 +734,24 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [90, 100], gobo: true, beam: 140, laser: 80,
-        },
-        {
-          ledRing: [120, 130], gobo: true, beam: 120, laser: 80,
-        },
-        {
-          ledRing: [60, 70], gobo: false, beam: 110, laser: 80,
-        },
+        { ledRing: [90, 100], gobo: true, beam: 140, laser: 50, starfield: true, moves: [
+          { axis: [255, 60], duration: 3000 },
+          { axis: [405, 75], duration: 3000 },
+          { axis: [555, 60], duration: 3000 },
+          { axis: [405, 50], duration: 3000 },
+        ]},
+        { ledRing: [120, 130], gobo: true, beam: 120, laser: 45, starfield: true, moves: [
+          { axis: [210, 60], duration: 3000 },
+          { axis: [360, 75], duration: 3000 },
+          { axis: [510, 60], duration: 3000 },
+          { axis: [360, 50], duration: 3000 },
+        ]},
+        { ledRing: [60, 70], gobo: true, beam: 110, laser: 40, starfield: true, moves: [
+          { axis: [300, 60], duration: 3000 },
+          { axis: [450, 75], duration: 3000 },
+          { axis: [600, 60], duration: 3000 },
+          { axis: [450, 50], duration: 3000 },
+        ]},
       ],
     },
   },
@@ -372,22 +818,31 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [130, 140], gobo: true, beam: 150, laser: 80,
-        },
-        {
-          ledRing: [110, 120], gobo: true, beam: 130, laser: 80,
-        },
-        {
-          ledRing: [150, 140], gobo: false, beam: 120, laser: 80,
-        },
+        { ledRing: [130, 140], gobo: true, beam: 150, laser: 55, starfield: true, moves: [
+          { axis: [255, 60], duration: 3000 },
+          { axis: [405, 75], duration: 3000 },
+          { axis: [555, 60], duration: 3000 },
+          { axis: [405, 50], duration: 3000 },
+        ]},
+        { ledRing: [110, 120], gobo: true, beam: 130, laser: 48, starfield: true, moves: [
+          { axis: [210, 60], duration: 3000 },
+          { axis: [360, 75], duration: 3000 },
+          { axis: [510, 60], duration: 3000 },
+          { axis: [360, 50], duration: 3000 },
+        ]},
+        { ledRing: [150, 140], gobo: true, beam: 120, laser: 45, starfield: true, moves: [
+          { axis: [300, 60], duration: 3000 },
+          { axis: [450, 75], duration: 3000 },
+          { axis: [600, 60], duration: 3000 },
+          { axis: [450, 50], duration: 3000 },
+        ]},
       ],
     },
   },
 
   // Bright, punchy. Purple/green/dark PAR at 400ms with dark rest beat. Fast expo head snaps.
   // Gobo spinning, prism on. Trap/rap club energy.
-  'hip hop': {
+  'hip-hop': {
     luminous: { head: 220, mini: 255, par: 190 },
     strobing: { threshold: 0.2, paceWeight: 0.35, energyWeight: 0.65, danceExp: 1.0 },
     variants: {
@@ -427,33 +882,53 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [112, 32], ledRing: [214, 196], gobo: 144,
         },
         {
-          // Far-left (85°) → far-right (425°) → center (235°), tilt 56→90→66. Wide ~340° snap, slams high-right, lands center-mid.
+          // Far-left (85°) → far-right (425°) → center (235°) → left (110°). Full cycle return.
           moves: [
             { axis: [85, 56], duration: 500, easing: easeInExpo },
             { axis: [425, 90], duration: 500, easing: easeInExpo },
             { axis: [235, 66], duration: 500, easing: easeInExpo },
+            { axis: [110, 58], duration: 500, easing: easeInExpo },
           ],
           colors: [16, 112], ledRing: [196, 214], gobo: 160,
         },
         {
-          // Right (275°) → left (170°) → far-right (425°), tilt 56→100→66. Reverse direction snap: starts right-low, lifts left-high, fires far-right.
+          // Right (275°) → left (170°) → far-right (425°) → center (280°). Return toward start.
           moves: [
             { axis: [275, 56], duration: 500, easing: easeInExpo },
             { axis: [170, 100], duration: 500, easing: easeInExpo },
             { axis: [425, 66], duration: 500, easing: easeInExpo },
+            { axis: [280, 60], duration: 500, easing: easeInExpo },
           ],
           colors: [64, 112], ledRing: [220, 190], gobo: 48,
         },
       ],
       mini: [
         {
-          ledRing: [180, 170], gobo: true, beam: 200, laser: 45, starfield: true,
+          ledRing: [180, 170], gobo: true, beam: 200, laser: 45,
+          moves: [
+            { axis: [270, 35], duration: 500 },
+            { axis: [420, 60], duration: 500 },
+            { axis: [570, 35], duration: 500 },
+            { axis: [420, 15], duration: 500 },
+          ],
         },
         {
-          ledRing: [200, 210], gobo: true, beam: 210, laser: 60, starfield: true,
+          ledRing: [200, 210], gobo: true, beam: 210, laser: 60,
+          moves: [
+            { axis: [225, 35], duration: 500 },
+            { axis: [375, 60], duration: 500 },
+            { axis: [525, 35], duration: 500 },
+            { axis: [375, 15], duration: 500 },
+          ],
         },
         {
-          ledRing: [160, 180], gobo: false, beam: 180, laser: 50, starfield: true,
+          ledRing: [160, 180], gobo: false, beam: 180, laser: 50,
+          moves: [
+            { axis: [315, 35], duration: 500 },
+            { axis: [465, 60], duration: 500 },
+            { axis: [615, 35], duration: 500 },
+            { axis: [465, 15], duration: 500 },
+          ],
         },
       ],
     },
@@ -511,26 +986,35 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [64, 16], ledRing: [94, 88], gobo: 16,
         },
         {
-          // Left (170°) → center-right (295°) → center (235°) → right (350°), tilt 70→90→62→76. Slow dub drift with a descending-then-climbing tilt path.
+          // Left (170°) → center-right (295°) → right (350°) → center (210°). Dub drift returns home.
           moves: [
             { axis: [170, 70], duration: 1800, easing: easeInOutSine },
             { axis: [295, 90], duration: 1800, easing: easeInOutSine },
-            { axis: [235, 62], duration: 1800, easing: easeInOutSine },
             { axis: [350, 76], duration: 1800, easing: easeInOutSine },
+            { axis: [210, 68], duration: 1800, easing: easeInOutSine },
           ],
           colors: [32, 80], ledRing: [82, 76], gobo: 32,
         },
       ],
       mini: [
-        {
-          ledRing: [70, 80], gobo: true, beam: 160, laser: 80,
-        },
-        {
-          ledRing: [60, 50], gobo: true, beam: 140, laser: 80,
-        },
-        {
-          ledRing: [30, 20], gobo: false, beam: 120, laser: 80,
-        },
+        { ledRing: [70, 80], gobo: true, beam: 160, laser: 55, moves: [
+          { axis: [255, 35], duration: 1500 },
+          { axis: [405, 60], duration: 1500 },
+          { axis: [555, 35], duration: 1500 },
+          { axis: [405, 15], duration: 1500 },
+        ]},
+        { ledRing: [60, 50], gobo: true, beam: 140, laser: 50, moves: [
+          { axis: [210, 35], duration: 1500 },
+          { axis: [360, 60], duration: 1500 },
+          { axis: [510, 35], duration: 1500 },
+          { axis: [360, 15], duration: 1500 },
+        ]},
+        { ledRing: [30, 20], gobo: true, beam: 120, laser: 45, moves: [
+          { axis: [300, 35], duration: 1500 },
+          { axis: [450, 60], duration: 1500 },
+          { axis: [600, 35], duration: 1500 },
+          { axis: [450, 15], duration: 1500 },
+        ]},
       ],
     },
   },
@@ -597,13 +1081,31 @@ export const ProfileConfigs: Record<string, Profile> = {
       ],
       mini: [
         {
-          ledRing: [190, 200], gobo: true, beam: 190, laser: 40, starfield: true,
+          ledRing: [190, 200], gobo: true, beam: 190, laser: 40,
+          moves: [
+            { axis: [270, 35], duration: 800 },
+            { axis: [420, 60], duration: 800 },
+            { axis: [570, 35], duration: 800 },
+            { axis: [420, 15], duration: 800 },
+          ],
         },
         {
-          ledRing: [200, 220], gobo: true, beam: 200, laser: 55, starfield: true,
+          ledRing: [200, 220], gobo: true, beam: 200, laser: 55,
+          moves: [
+            { axis: [225, 35], duration: 800 },
+            { axis: [375, 60], duration: 800 },
+            { axis: [525, 35], duration: 800 },
+            { axis: [375, 15], duration: 800 },
+          ],
         },
         {
-          ledRing: [40, 50], gobo: false, beam: 170, laser: 45, starfield: true,
+          ledRing: [40, 50], gobo: false, beam: 170, laser: 45,
+          moves: [
+            { axis: [315, 35], duration: 800 },
+            { axis: [465, 60], duration: 800 },
+            { axis: [615, 35], duration: 800 },
+            { axis: [465, 15], duration: 800 },
+          ],
         },
       ],
     },
@@ -611,7 +1113,7 @@ export const ProfileConfigs: Record<string, Profile> = {
 
   // Medium brightness, medium-slow motor. Orange/magenta/gold PAR at 800ms. Smooth three-point head.
   // Light prism on some variants. Groove-driven, warm.
-  'funk / soul': {
+  funk: {
     luminous: { head: 200, mini: 240, par: 170 },
     strobing: { threshold: 0.3, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
     variants: {
@@ -670,22 +1172,31 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [100, 90], gobo: true, beam: 180, laser: 80,
-        },
-        {
-          ledRing: [110, 120], gobo: true, beam: 170, laser: 80,
-        },
-        {
-          ledRing: [80, 70], gobo: false, beam: 150, laser: 80,
-        },
+        { ledRing: [100, 90], gobo: true, beam: 180, laser: 60, moves: [
+          { axis: [255, 35], duration: 1200 },
+          { axis: [405, 60], duration: 1200 },
+          { axis: [555, 35], duration: 1200 },
+          { axis: [405, 15], duration: 1200 },
+        ]},
+        { ledRing: [110, 120], gobo: true, beam: 170, laser: 55, moves: [
+          { axis: [210, 35], duration: 1200 },
+          { axis: [360, 60], duration: 1200 },
+          { axis: [510, 35], duration: 1200 },
+          { axis: [360, 15], duration: 1200 },
+        ]},
+        { ledRing: [80, 70], gobo: true, beam: 150, laser: 50, moves: [
+          { axis: [300, 35], duration: 1200 },
+          { axis: [450, 60], duration: 1200 },
+          { axis: [600, 35], duration: 1200 },
+          { axis: [450, 15], duration: 1200 },
+        ]},
       ],
     },
   },
 
   // Dim earthy tones, very slow motor. Warm amber/sage PAR with long 2.5s transitions.
   // No prism, minimal gobo. Acoustic, pastoral feel.
-  'folk, world, & country': {
+  folk: {
     luminous: { head: 160, mini: 210, par: 140 },
     strobing: { threshold: 0.6, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.5 },
     variants: {
@@ -744,15 +1255,24 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [20, 30], gobo: true, beam: 130, laser: 80,
-        },
-        {
-          ledRing: [10, 20], gobo: true, beam: 110, laser: 80,
-        },
-        {
-          ledRing: [60, 50], gobo: false, beam: 100, laser: 80,
-        },
+        { ledRing: [20, 30], gobo: true, beam: 130, laser: 45, starfield: true, moves: [
+          { axis: [255, 60], duration: 3000 },
+          { axis: [405, 75], duration: 3000 },
+          { axis: [555, 60], duration: 3000 },
+          { axis: [405, 50], duration: 3000 },
+        ]},
+        { ledRing: [10, 20], gobo: true, beam: 110, laser: 40, starfield: true, moves: [
+          { axis: [210, 60], duration: 3000 },
+          { axis: [360, 75], duration: 3000 },
+          { axis: [510, 60], duration: 3000 },
+          { axis: [360, 50], duration: 3000 },
+        ]},
+        { ledRing: [60, 50], gobo: true, beam: 100, laser: 35, starfield: true, moves: [
+          { axis: [300, 60], duration: 3000 },
+          { axis: [450, 75], duration: 3000 },
+          { axis: [600, 60], duration: 3000 },
+          { axis: [450, 50], duration: 3000 },
+        ]},
       ],
     },
   },
@@ -818,97 +1338,31 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [50, 60], gobo: true, beam: 110, laser: 80,
-        },
-        {
-          ledRing: [10, 20], gobo: true, beam: 90, laser: 80,
-        },
-        {
-          ledRing: [30, 40], gobo: false, beam: 80, laser: 80,
-        },
-      ],
-    },
-  },
-
-  // Medium bright warm theatrical tones, very slow motor. Warm peach/periwinkle PAR with white additive.
-  // 4s slow head, minimal gobo, slight prism on one variant. Broadway/film score feel.
-  'stage & screen': {
-    luminous: { head: 200, mini: 230, par: 160 },
-    strobing: { threshold: 0.7, paceWeight: 0.15, energyWeight: 0.85, danceExp: 1.8 },
-    variants: {
-      par: [
-        // Warm peach→cool periwinkle PAR with white. Slight prism.
-        {
-          colors: [
-            { rgbw: [255, 200, 150, 100], duration: 3000 },
-            { rgbw: [200, 200, 255, 0], duration: 3000 },
-          ]
-        },
-        // Peach→lavender→cream PAR. No prism, subtle gobo.
-        {
-          colors: [
-            { rgbw: [255, 180, 120, 80], duration: 3000 },
-            { rgbw: [180, 180, 255, 20], duration: 3000 },
-            { rgbw: [255, 220, 180, 60], duration: 3000 },
-          ]
-        },
-        // Amber spotlight→cool blue wash→warm white PAR.
-        {
-          colors: [
-            { rgbw: [255, 160, 80, 120], duration: 3500 },
-            { rgbw: [150, 170, 255, 10], duration: 3500 },
-            { rgbw: [255, 230, 200, 80], duration: 3500 },
-            { rgbw: [170, 190, 220, 30], duration: 3500 },
-          ]
-        },
-      ],
-      head: [
-        {
-          // Center (255°) ↔ right-center (275°), tilt 80→70. 20° pan nudge only — spotlight-like, barely moves. Theatrical focus.
-          moves: [
-            { axis: [255, 80], duration: 4000, easing: easeInOutSine },
-            { axis: [275, 70], duration: 4000, easing: easeInOutSine },
-          ],
-          colors: [0, 80], ledRing: [100, 106], gobo: 0,
-        },
-        {
-          // Left-center (210°) → right (320°) → center (255°), tilt 76→98→68. Slow theatrical reveal: starts even, rises right, dips low-center like a curtain fall.
-          moves: [
-            { axis: [210, 76], duration: 4000, easing: easeInOutSine },
-            { axis: [320, 98], duration: 4000, easing: easeInOutSine },
-            { axis: [255, 68], duration: 4000, easing: easeInOutSine },
-          ],
-          colors: [80, 64], ledRing: [88, 94], gobo: 16,
-        },
-        {
-          // 220→305→245→275°, tilt 82→68→92→62. Four-point stage wander within an 85° window, tilt alternates high-low for a slow stage-cross feel.
-          moves: [
-            { axis: [220, 82], duration: 4500, easing: easeInOutSine },
-            { axis: [305, 68], duration: 4500, easing: easeInOutSine },
-            { axis: [245, 92], duration: 4500, easing: easeInOutSine },
-            { axis: [275, 62], duration: 4500, easing: easeInOutSine },
-          ],
-          colors: [0, 96], ledRing: [106, 100], gobo: 0,
-        },
-      ],
-      mini: [
-        {
-          ledRing: [90, 110], gobo: true, beam: 160, laser: 80,
-        },
-        {
-          ledRing: [100, 120], gobo: true, beam: 140, laser: 80,
-        },
-        {
-          ledRing: [60, 50], gobo: false, beam: 130, laser: 80,
-        },
+        { ledRing: [50, 60], gobo: true, beam: 110, laser: 28, starfield: true, moves: [
+          { axis: [255, 60], duration: 5000 },
+          { axis: [405, 75], duration: 5000 },
+          { axis: [555, 60], duration: 5000 },
+          { axis: [405, 50], duration: 5000 },
+        ]},
+        { ledRing: [10, 20], gobo: true, beam: 90, laser: 22, starfield: true, moves: [
+          { axis: [240, 60], duration: 5000 },
+          { axis: [390, 75], duration: 5000 },
+          { axis: [540, 60], duration: 5000 },
+          { axis: [390, 50], duration: 5000 },
+        ]},
+        { ledRing: [30, 40], gobo: true, beam: 80, laser: 18, starfield: true, moves: [
+          { axis: [270, 60], duration: 5000 },
+          { axis: [420, 75], duration: 5000 },
+          { axis: [570, 60], duration: 5000 },
+          { axis: [420, 50], duration: 5000 },
+        ]},
       ],
     },
   },
 
   // Max brightness, fast motor. Deep blue/cyan/white rapid 200ms cycling. Aggressive expo snaps.
   // Prism always on, fast gobo spin. 4-on-the-floor club energy distinct from general Electronic.
-  'house / techno / trance': {
+  house: {
     luminous: { head: 255, mini: 255, par: 200 },
     strobing: { threshold: 0.12, paceWeight: 0.4, energyWeight: 0.6, danceExp: 0.7 },
     variants: {
@@ -970,27 +1424,35 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [210, 230], gobo: true, beam: 210, laser: 75, starfield: true,
-        },
-        {
-          ledRing: [220, 200], gobo: true, beam: 220, laser: 80, starfield: true,
-        },
-        {
-          ledRing: [180, 190], gobo: false, beam: 200, laser: 70, starfield: true,
-        },
+        { ledRing: [210, 230], gobo: true, beam: 210, laser: 75, moves: [
+          { axis: [305, 35], duration: 500 },
+          { axis: [455, 60], duration: 500 },
+          { axis: [605, 35], duration: 500 },
+          { axis: [455, 15], duration: 500 },
+        ]},
+        { ledRing: [220, 200], gobo: true, beam: 220, laser: 80, moves: [
+          { axis: [265, 35], duration: 480 },
+          { axis: [415, 60], duration: 480 },
+          { axis: [565, 35], duration: 480 },
+          { axis: [415, 15], duration: 480 },
+        ]},
+        { ledRing: [180, 190], gobo: false, beam: 200, laser: 70, moves: [
+          { axis: [335, 35], duration: 550 },
+          { axis: [485, 60], duration: 550 },
+          { axis: [635, 35], duration: 550 },
+          { axis: [485, 15], duration: 550 },
+        ]},
       ],
     },
   },
 
   // Very dim, near-static. Dark charcoal/deep teal/black PAR at 6–8s. Barely-moving head.
-  // No prism, no gobo. Meditative, dark, near-silence visual.
-  'ambient / drone': {
+  // No prism, no gobo. Meditative, dark. Faint starfield adds depth without breaking silence.
+  ambient: {
     luminous: { head: 60, mini: 80, par: 40 },
     strobing: { threshold: 0.95, paceWeight: 0.1, energyWeight: 0.9, danceExp: 2.5 },
     variants: {
       par: [
-        // Near-black→deep teal→black PAR.
         {
           colors: [
             { rgbw: [0, 20, 40], duration: 8000 },
@@ -998,7 +1460,6 @@ export const ProfileConfigs: Record<string, Profile> = {
             { rgbw: [0, 10, 30], duration: 8000 },
           ]
         },
-        // Deep indigo→near-black→slate PAR.
         {
           colors: [
             { rgbw: [20, 0, 60], duration: 8000 },
@@ -1006,10 +1467,18 @@ export const ProfileConfigs: Record<string, Profile> = {
             { rgbw: [10, 20, 50], duration: 8000 },
           ]
         },
+        {
+          colors: [
+            { rgbw: [0, 30, 50], duration: 10000 },
+            { rgbw: [15, 0, 45], duration: 10000 },
+            { rgbw: [0, 40, 35], duration: 10000 },
+            { rgbw: [10, 10, 60], duration: 10000 },
+          ]
+        },
       ],
       head: [
         {
-          // Center (235°) ↔ center (265°), tilt 75→80. 30° drift over 12 seconds — barely visible, like a breath.
+          // Slow breath — 30° pan drift, tilt barely changes.
           moves: [
             { axis: [235, 75], duration: 12000, easing: easeInOutSine },
             { axis: [265, 80], duration: 12000, easing: easeInOutSine },
@@ -1017,29 +1486,60 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [112, 48], ledRing: [70, 76], gobo: 0,
         },
         {
-          // 245→255→235°, tilt 80→70→85. Tiny 20° triangle over 45 seconds total — completely still to the casual observer.
+          // Wide slow arc — 150° pan over 20s, visible but unhurried.
           moves: [
-            { axis: [245, 80], duration: 15000, easing: easeInOutSine },
-            { axis: [255, 70], duration: 15000, easing: easeInOutSine },
-            { axis: [235, 85], duration: 15000, easing: easeInOutSine },
+            { axis: [180, 78], duration: 20000, easing: easeInOutSine },
+            { axis: [330, 68], duration: 20000, easing: easeInOutSine },
           ],
-          colors: [48, 112], ledRing: [0, 70], gobo: 0,
+          colors: [48, 112], ledRing: [60, 70], gobo: 0,
+        },
+        {
+          // Four-point wander — 120° range, tilt oscillates gently.
+          moves: [
+            { axis: [200, 80], duration: 10000, easing: easeInOutSine },
+            { axis: [280, 70], duration: 10000, easing: easeInOutSine },
+            { axis: [220, 85], duration: 10000, easing: easeInOutSine },
+            { axis: [300, 72], duration: 10000, easing: easeInOutSine },
+          ],
+          colors: [112, 48], ledRing: [50, 65], gobo: 0,
+        },
+        {
+          // Very slow diagonal drift — wide pan across 180°, then drifts back. ~60s full cycle.
+          moves: [
+            { axis: [160, 70], duration: 15000, easing: easeInOutSine },
+            { axis: [255, 82], duration: 15000, easing: easeInOutSine },
+            { axis: [340, 90], duration: 15000, easing: easeInOutSine },
+            { axis: [200, 74], duration: 15000, easing: easeInOutSine },
+          ],
+          colors: [48, 96], ledRing: [55, 70], gobo: 0,
         },
       ],
       mini: [
-        {
-          ledRing: [0, 10], gobo: false, beam: 40, laser: 0,
-        },
-        {
-          ledRing: [0, 10], gobo: false, beam: 30, laser: 0,
-        },
+        { ledRing: [0, 10], gobo: true, beam: 40, laser: 20, starfield: true, moves: [
+          { axis: [310, 60], duration: 8000 },
+          { axis: [460, 75], duration: 8000 },
+          { axis: [610, 60], duration: 8000 },
+          { axis: [460, 50], duration: 8000 },
+        ]},
+        { ledRing: [0, 15], gobo: true, beam: 35, laser: 18, starfield: true, moves: [
+          { axis: [270, 60], duration: 10000 },
+          { axis: [420, 75], duration: 10000 },
+          { axis: [570, 60], duration: 10000 },
+          { axis: [420, 50], duration: 10000 },
+        ]},
+        { ledRing: [0, 10], gobo: true, beam: 30, laser: 15, starfield: true, moves: [
+          { axis: [340, 60], duration: 9000 },
+          { axis: [490, 75], duration: 9000 },
+          { axis: [640, 60], duration: 9000 },
+          { axis: [490, 50], duration: 9000 },
+        ]},
       ],
     },
   },
 
   // Medium-bright warm, slow motor. Deep rose/mauve/amber PAR at 1.5s. Gentle two/three-point head.
   // Light prism on some variants. Smooth, sensual, late-night feel.
-  'r&b / soul': {
+  'r&b': {
     luminous: { head: 190, mini: 230, par: 160 },
     strobing: { threshold: 0.35, paceWeight: 0.25, energyWeight: 0.75, danceExp: 1.2 },
     variants: {
@@ -1088,25 +1588,35 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [64, 80], ledRing: [130, 148], gobo: 48,
         },
         {
-          // Far-left (85°) → far-right (400°) → center (245°), tilt 60→80→65. Wide R&B spread, rises right, settles mid-low center.
+          // Far-left (85°) → far-right (400°) → center (245°) → left (110°). Smooth full return.
           moves: [
             { axis: [85, 60], duration: 2000, easing: easeInOutSine },
             { axis: [400, 80], duration: 2000, easing: easeInOutSine },
             { axis: [245, 65], duration: 2000, easing: easeInOutSine },
+            { axis: [110, 62], duration: 2000, easing: easeInOutSine },
           ],
           colors: [96, 16], ledRing: [166, 178], gobo: 16,
         },
       ],
       mini: [
-        {
-          ledRing: [80, 60], gobo: true, beam: 160, laser: 80,
-        },
-        {
-          ledRing: [70, 80], gobo: true, beam: 150, laser: 80,
-        },
-        {
-          ledRing: [110, 100], gobo: false, beam: 130, laser: 80,
-        },
+        { ledRing: [80, 60], gobo: true, beam: 160, laser: 55, starfield: true, moves: [
+          { axis: [255, 60], duration: 2000 },
+          { axis: [405, 75], duration: 2000 },
+          { axis: [555, 60], duration: 2000 },
+          { axis: [405, 50], duration: 2000 },
+        ]},
+        { ledRing: [70, 80], gobo: true, beam: 150, laser: 50, starfield: true, moves: [
+          { axis: [210, 60], duration: 2000 },
+          { axis: [360, 75], duration: 2000 },
+          { axis: [510, 60], duration: 2000 },
+          { axis: [360, 50], duration: 2000 },
+        ]},
+        { ledRing: [110, 100], gobo: true, beam: 130, laser: 45, starfield: true, moves: [
+          { axis: [300, 60], duration: 2000 },
+          { axis: [450, 75], duration: 2000 },
+          { axis: [600, 60], duration: 2000 },
+          { axis: [450, 50], duration: 2000 },
+        ]},
       ],
     },
   },
@@ -1165,45 +1675,72 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [16, 0], ledRing: [154, 190], gobo: 32,
         },
         {
-          // Extreme-left (30°) → extreme-right (495°) → center (255°), tilt 56→70→56. Three-point annihilation: slams across ~465°, drops tilt abruptly center.
+          // Extreme-left (30°) → extreme-right (495°) → center (255°) → left (50°). Thrash and return.
           moves: [
             { axis: [30, 56], duration: 280, easing: easeInExpo },
             { axis: [495, 70], duration: 280, easing: easeInExpo },
             { axis: [255, 56], duration: 280, easing: easeInExpo },
+            { axis: [50, 58], duration: 280, easing: easeInExpo },
           ],
           colors: [0, 16], ledRing: [190, 154], gobo: 48,
         },
         {
-          // Extreme-left (20°) → extreme-right (510°) → center (235°), tilt 60→56→58. Near-maximum 490° sweep, lands low-center — chaotic thrash pattern.
+          // Extreme-left (20°) → extreme-right (510°) → center (235°) → left (40°). Chaotic sweep, snaps back.
           moves: [
             { axis: [20, 60], duration: 300, easing: easeInExpo },
             { axis: [510, 56], duration: 300, easing: easeInExpo },
             { axis: [235, 58], duration: 300, easing: easeInExpo },
+            { axis: [40, 62], duration: 300, easing: easeInExpo },
           ],
           colors: [16, 80], ledRing: [220, 250], gobo: 16,
         },
         {
-          // Left (65°) → far-right (465°) → right-center (275°), tilt 64→56→76. Drops low on the slam-right, rebounds high-center. Most erratic Metal move.
+          // Left (65°) → far-right (465°) → right-center (275°) → left (90°). Erratic slam, returns left.
           moves: [
             { axis: [65, 64], duration: 250, easing: easeInExpo },
             { axis: [465, 56], duration: 250, easing: easeInExpo },
             { axis: [275, 76], duration: 250, easing: easeInExpo },
+            { axis: [90, 60], duration: 250, easing: easeInExpo },
           ],
           colors: [0, 16], ledRing: [238, 220], gobo: 64,
         },
       ],
       mini: [
         {
-          ledRing: [160, 180], gobo: true, beam: 220, laser: 70, starfield: true,
+          ledRing: [160, 180], gobo: true, beam: 220, laser: 70,
+          moves: [
+            { axis: [270, 35], duration: 280 },
+            { axis: [420, 60], duration: 280 },
+            { axis: [570, 35], duration: 280 },
+            { axis: [420, 15], duration: 280 },
+          ],
         },
         {
-          ledRing: [180, 200], gobo: true, beam: 230, laser: 80, starfield: true,
+          ledRing: [180, 200], gobo: true, beam: 230, laser: 80,
+          moves: [
+            { axis: [225, 35], duration: 280 },
+            { axis: [375, 60], duration: 280 },
+            { axis: [525, 35], duration: 280 },
+            { axis: [375, 15], duration: 280 },
+          ],
         },
         {
-          ledRing: [210, 230], gobo: true, beam: 215, laser: 75, starfield: true,
+          ledRing: [210, 230], gobo: true, beam: 215, laser: 75,
+          moves: [
+            { axis: [315, 35], duration: 280 },
+            { axis: [465, 60], duration: 280 },
+            { axis: [615, 35], duration: 280 },
+            { axis: [465, 15], duration: 280 },
+          ],
         },
         {
-          ledRing: [150, 160], gobo: false, beam: 200, laser: 65, starfield: true,
+          ledRing: [150, 160], gobo: false, beam: 200, laser: 65,
+          moves: [
+            { axis: [270, 35], duration: 280 },
+            { axis: [420, 60], duration: 280 },
+            { axis: [570, 35], duration: 280 },
+            { axis: [420, 15], duration: 280 },
+          ],
         },
       ],
     },
@@ -1262,124 +1799,779 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [80, 64], ledRing: [82, 94], gobo: 32,
         },
         {
-          // Left (160°) → right (305°) → center (220°) → far-right (340°), tilt 75→65→80→70. Four-point waltz, tilt rocks up-down-up-down like a bow on each beat.
+          // Left (160°) → right (305°) → far-right (340°) → center (200°). Waltz returns home.
           moves: [
             { axis: [160, 75], duration: 1400, easing: easeInOutSine },
             { axis: [305, 65], duration: 1400, easing: easeInOutSine },
-            { axis: [220, 80], duration: 1400, easing: easeInOutSine },
             { axis: [340, 70], duration: 1400, easing: easeInOutSine },
+            { axis: [200, 78], duration: 1400, easing: easeInOutSine },
           ],
           colors: [64, 80], ledRing: [94, 88], gobo: 16,
         },
       ],
       mini: [
-        {
-          ledRing: [82, 90], gobo: true, beam: 140, laser: 80,
-        },
-        {
-          ledRing: [50, 60], gobo: true, beam: 120, laser: 80,
-        },
-        {
-          ledRing: [20, 30], gobo: false, beam: 110, laser: 80,
-        },
+        { ledRing: [82, 90], gobo: true, beam: 140, laser: 55, moves: [
+          { axis: [255, 35], duration: 1200 },
+          { axis: [405, 60], duration: 1200 },
+          { axis: [555, 35], duration: 1200 },
+          { axis: [405, 15], duration: 1200 },
+        ]},
+        { ledRing: [50, 60], gobo: true, beam: 120, laser: 50, moves: [
+          { axis: [210, 35], duration: 1200 },
+          { axis: [360, 60], duration: 1200 },
+          { axis: [510, 35], duration: 1200 },
+          { axis: [360, 15], duration: 1200 },
+        ]},
+        { ledRing: [20, 30], gobo: true, beam: 110, laser: 45, moves: [
+          { axis: [300, 35], duration: 1200 },
+          { axis: [450, 60], duration: 1200 },
+          { axis: [600, 35], duration: 1200 },
+          { axis: [450, 15], duration: 1200 },
+        ]},
       ],
     },
   },
 
-  // High brightness, fast motor. Hyper-saturated neon pastels — hot pink/mint/yellow/sky.
-  // PAR cycles at 250-400ms. Playful expo/sine head mix. Prism on, fast gobo.
-  'k-pop / j-pop': {
-    luminous: { head: 240, mini: 255, par: 195 },
-    strobing: { threshold: 0.18, paceWeight: 0.3, energyWeight: 0.7, danceExp: 0.9 },
+  // Soft blue-white shimmer, barely moving. Dreamy, ethereal atmosphere. Starfield adds galaxy depth.
+  beautiful: {
+    luminous: { head: 160, mini: 200, par: 130 },
+    strobing: { threshold: 0.85, paceWeight: 0.1, energyWeight: 0.9, danceExp: 2.0 },
     variants: {
       par: [
-        // Hot pink→mint→yellow→sky PAR.
         {
           colors: [
-            { rgbw: [255, 50, 200], duration: 300 },
-            { rgbw: [50, 255, 180], duration: 300 },
-            { rgbw: [255, 240, 0], duration: 300 },
-            { rgbw: [0, 200, 255], duration: 300 },
+            { rgbw: [180, 210, 255, 80], duration: 4000 },
+            { rgbw: [255, 240, 255, 60], duration: 4000 },
+            { rgbw: [140, 200, 255, 40], duration: 4000 },
           ]
         },
-        // Coral→lime→lavender→gold PAR.
         {
           colors: [
-            { rgbw: [255, 100, 100], duration: 350 },
-            { rgbw: [100, 255, 100], duration: 350 },
-            { rgbw: [200, 100, 255], duration: 350 },
-            { rgbw: [255, 220, 50], duration: 350 },
-          ]
-        },
-        // White→electric blue→neon pink→white PAR. Fast flash feel, prism max.
-        {
-          colors: [
-            { rgbw: [255, 255, 255], duration: 200 },
-            { rgbw: [0, 150, 255], duration: 300 },
-            { rgbw: [255, 0, 200], duration: 300 },
-            { rgbw: [255, 255, 255], duration: 150 },
-          ]
-        },
-        // Pastel rainbow cycle — peach→sky→lilac→mint. Idol-show sweeping grace.
-        {
-          colors: [
-            { rgbw: [255, 180, 150], duration: 400 },
-            { rgbw: [150, 220, 255], duration: 400 },
-            { rgbw: [220, 160, 255], duration: 400 },
-            { rgbw: [150, 255, 200], duration: 400 },
+            { rgbw: [220, 230, 255, 100], duration: 4500 },
+            { rgbw: [180, 255, 240, 50], duration: 4500 },
+            { rgbw: [255, 220, 255, 70], duration: 4500 },
           ]
         },
       ],
       head: [
         {
-          // Left-center (160°) ↔ right-center (350°), tilt 65→80. Perky two-point bounce, chirpy idol-show snap.
           moves: [
-            { axis: [160, 65], duration: 500, easing: easeInExpo },
-            { axis: [350, 80], duration: 500, easing: easeInExpo },
+            { axis: [240, 78], duration: 6000, easing: easeInOutSine },
+            { axis: [270, 68], duration: 6000, easing: easeInOutSine },
           ],
-          colors: [96, 64], ledRing: [202, 208], gobo: 80,
+          colors: [0, 48], ledRing: [90, 100], gobo: 0,
         },
         {
-          // Left (105°) → right (380°) → center (235°), tilt 62→80→98. Playful three-step sweep, tilt climbs with each stop — ascending energy.
           moves: [
-            { axis: [105, 62], duration: 450, easing: easeInOutSine },
-            { axis: [380, 80], duration: 450, easing: easeInOutSine },
-            { axis: [235, 98], duration: 450, easing: easeInOutSine },
+            { axis: [220, 82], duration: 7000, easing: easeInOutSine },
+            { axis: [280, 70], duration: 7000, easing: easeInOutSine },
+            { axis: [250, 85], duration: 7000, easing: easeInOutSine },
           ],
-          colors: [64, 96], ledRing: [226, 232], gobo: 64,
-        },
-        {
-          // Far-left (85°) → far-right (425°) → center (245°), tilt 58→72→90. Hard snap across stage, tilt climbs on each step, peaks high-center.
-          moves: [
-            { axis: [85, 58], duration: 400, easing: easeInExpo },
-            { axis: [425, 72], duration: 400, easing: easeInExpo },
-            { axis: [245, 90], duration: 400, easing: easeInExpo },
-          ],
-          colors: [48, 96], ledRing: [184, 196], gobo: 160,
-        },
-        {
-          // Left (140°) → right (330°) → center (220°), tilt 76→62→98. Sine-eased graceful arc, dips right then peaks high-center — sweeping stage bow.
-          moves: [
-            { axis: [140, 76], duration: 600, easing: easeInOutSine },
-            { axis: [330, 62], duration: 600, easing: easeInOutSine },
-            { axis: [220, 98], duration: 600, easing: easeInOutSine },
-          ],
-          colors: [96, 48], ledRing: [178, 202], gobo: 96,
+          colors: [48, 0], ledRing: [80, 95], gobo: 0,
         },
       ],
       mini: [
+        { ledRing: [20, 30], gobo: true, beam: 80, laser: 25, starfield: true, moves: [
+          { axis: [255, 60], duration: 6000 },
+          { axis: [405, 75], duration: 6000 },
+          { axis: [555, 60], duration: 6000 },
+          { axis: [405, 50], duration: 6000 },
+        ]},
+        { ledRing: [10, 20], gobo: true, beam: 60, laser: 20, starfield: true, moves: [
+          { axis: [240, 60], duration: 6000 },
+          { axis: [390, 75], duration: 6000 },
+          { axis: [540, 60], duration: 6000 },
+          { axis: [390, 50], duration: 6000 },
+        ]},
+      ],
+    },
+  },
+
+  // Deep blue-indigo slow drift. Melancholic, introspective. Sparse starfield suits the mood.
+  sad: {
+    luminous: { head: 120, mini: 160, par: 110 },
+    strobing: { threshold: 0.95, paceWeight: 0.1, energyWeight: 0.9, danceExp: 2.0 },
+    variants: {
+      par: [
         {
-          ledRing: [190, 210], gobo: true, beam: 200, laser: 60, starfield: true,
+          colors: [
+            { rgbw: [0, 30, 120], duration: 4000 },
+            { rgbw: [20, 0, 80], duration: 4000 },
+            { rgbw: [0, 50, 100], duration: 4000 },
+          ]
         },
         {
-          ledRing: [220, 230], gobo: true, beam: 210, laser: 70, starfield: true,
+          colors: [
+            { rgbw: [10, 10, 100], duration: 5000 },
+            { rgbw: [40, 20, 120], duration: 5000 },
+            { rgbw: [0, 30, 80], duration: 5000 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [210, 90], duration: 5000, easing: easeInOutSine },
+            { axis: [255, 100], duration: 5000, easing: easeInOutSine },
+          ],
+          colors: [112, 48], ledRing: [60, 70], gobo: 0,
         },
         {
-          ledRing: [40, 50], gobo: true, beam: 185, laser: 55, starfield: true,
+          moves: [
+            { axis: [200, 85], duration: 6000, easing: easeInOutSine },
+            { axis: [270, 95], duration: 6000, easing: easeInOutSine },
+            { axis: [230, 105], duration: 6000, easing: easeInOutSine },
+          ],
+          colors: [48, 112], ledRing: [50, 65], gobo: 0,
+        },
+      ],
+      mini: [
+        { ledRing: [40, 50], gobo: true, beam: 70, laser: 18, starfield: true, moves: [
+          { axis: [255, 60], duration: 5000 },
+          { axis: [405, 75], duration: 5000 },
+          { axis: [555, 60], duration: 5000 },
+          { axis: [405, 50], duration: 5000 },
+        ]},
+        { ledRing: [30, 40], gobo: true, beam: 60, laser: 15, starfield: true, moves: [
+          { axis: [240, 60], duration: 5000 },
+          { axis: [390, 75], duration: 5000 },
+          { axis: [540, 60], duration: 5000 },
+          { axis: [390, 50], duration: 5000 },
+        ]},
+      ],
+    },
+  },
+
+  // Bright yellow-orange-white bursts, upbeat moderate pace. Cheerful, sunny.
+  happy: {
+    luminous: { head: 220, mini: 250, par: 190 },
+    strobing: { threshold: 0.3, paceWeight: 0.3, energyWeight: 0.7, danceExp: 1.0 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 220, 0], duration: 500 },
+            { rgbw: [255, 255, 255, 80], duration: 500 },
+            { rgbw: [255, 150, 0], duration: 500 },
+            { rgbw: [255, 240, 100], duration: 500 },
+          ]
         },
         {
-          ledRing: [200, 210], gobo: false, beam: 170, laser: 65, starfield: true,
+          colors: [
+            { rgbw: [255, 200, 50], duration: 600 },
+            { rgbw: [200, 255, 100], duration: 600 },
+            { rgbw: [255, 240, 0], duration: 600 },
+          ]
         },
+        {
+          colors: [
+            { rgbw: [255, 180, 80], duration: 500 },
+            { rgbw: [255, 255, 150, 60], duration: 500 },
+            { rgbw: [200, 230, 0], duration: 500 },
+            { rgbw: [255, 200, 0], duration: 500 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [170, 72], duration: 900, easing: easeInOutSine },
+            { axis: [340, 88], duration: 900, easing: easeInOutSine },
+          ],
+          colors: [64, 80], ledRing: [200, 210], gobo: 64,
+        },
+        {
+          moves: [
+            { axis: [255, 65], duration: 900, easing: easeInOutSine },
+            { axis: [130, 85], duration: 900, easing: easeInOutSine },
+            { axis: [370, 75], duration: 900, easing: easeInOutSine },
+          ],
+          colors: [80, 64], ledRing: [210, 220], gobo: 80,
+        },
+        {
+          moves: [
+            { axis: [200, 78], duration: 1000, easing: easeInOutSine },
+            { axis: [310, 68], duration: 1000, easing: easeInOutSine },
+            { axis: [250, 90], duration: 1000, easing: easeInOutSine },
+          ],
+          colors: [64, 96], ledRing: [190, 205], gobo: 48,
+        },
+      ],
+      mini: [
+        { ledRing: [50, 60], gobo: true, beam: 180, laser: 65, moves: [
+          { axis: [255, 35], duration: 900 },
+          { axis: [405, 60], duration: 900 },
+          { axis: [555, 35], duration: 900 },
+          { axis: [405, 15], duration: 900 },
+        ]},
+        { ledRing: [40, 50], gobo: true, beam: 170, laser: 60, moves: [
+          { axis: [210, 35], duration: 900 },
+          { axis: [360, 60], duration: 900 },
+          { axis: [510, 35], duration: 900 },
+          { axis: [360, 15], duration: 900 },
+        ]},
+        { ledRing: [60, 70], gobo: true, beam: 160, laser: 55, moves: [
+          { axis: [300, 35], duration: 900 },
+          { axis: [450, 60], duration: 900 },
+          { axis: [600, 35], duration: 900 },
+          { axis: [450, 15], duration: 900 },
+        ]},
+      ],
+    },
+  },
+
+  // High energy, saturated multi-color rapid cycling. Maximum dance floor excitement.
+  party: {
+    luminous: { head: 255, mini: 255, par: 200 },
+    strobing: { threshold: 0.14, paceWeight: 0.38, energyWeight: 0.62, danceExp: 0.8 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 0, 255], duration: 200 },
+            { rgbw: [0, 255, 255], duration: 200 },
+            { rgbw: [255, 255, 0], duration: 200 },
+            { rgbw: [255, 0, 100], duration: 200 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 100, 0], duration: 200 },
+            { rgbw: [0, 0, 255], duration: 200 },
+            { rgbw: [0, 255, 100], duration: 200 },
+            { rgbw: [255, 255, 255], duration: 100 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [200, 0, 255], duration: 250 },
+            { rgbw: [255, 200, 0], duration: 250 },
+            { rgbw: [0, 255, 200], duration: 250 },
+            { rgbw: [255, 0, 150], duration: 250 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [105, 56], duration: 380, easing: easeInExpo },
+            { axis: [400, 68], duration: 380, easing: easeInExpo },
+          ],
+          colors: [112, 48], ledRing: [240, 255], gobo: 170,
+        },
+        {
+          moves: [
+            { axis: [65, 56], duration: 380, easing: easeInExpo },
+            { axis: [275, 84], duration: 380, easing: easeInExpo },
+            { axis: [445, 62], duration: 380, easing: easeInExpo },
+          ],
+          colors: [48, 0], ledRing: [230, 245], gobo: 190,
+        },
+        {
+          moves: [
+            { axis: [40, 66], duration: 340, easing: easeInExpo },
+            { axis: [465, 56], duration: 340, easing: easeInExpo },
+            { axis: [235, 96], duration: 340, easing: easeInExpo },
+          ],
+          colors: [96, 48], ledRing: [250, 240], gobo: 150,
+        },
+      ],
+      mini: [
+        { ledRing: [220, 240], gobo: true, beam: 220, laser: 80, moves: [
+          { axis: [300, 35], duration: 520 },
+          { axis: [450, 60], duration: 520 },
+          { axis: [600, 35], duration: 520 },
+          { axis: [450, 15], duration: 520 },
+        ]},
+        { ledRing: [230, 210], gobo: true, beam: 230, laser: 80, moves: [
+          { axis: [260, 35], duration: 500 },
+          { axis: [410, 60], duration: 500 },
+          { axis: [560, 35], duration: 500 },
+          { axis: [410, 15], duration: 500 },
+        ]},
+        { ledRing: [190, 200], gobo: false, beam: 210, laser: 75, moves: [
+          { axis: [330, 35], duration: 560 },
+          { axis: [480, 60], duration: 560 },
+          { axis: [630, 35], duration: 560 },
+          { axis: [480, 15], duration: 560 },
+        ]},
+      ],
+    },
+  },
+
+  // Warm rose-magenta-amber glow, slow sensual sweeps. Intimate, low-lit feel.
+  sexy: {
+    luminous: { head: 180, mini: 220, par: 150 },
+    strobing: { threshold: 0.4, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.3 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [200, 20, 60], duration: 2000 },
+            { rgbw: [255, 60, 100], duration: 2000 },
+            { rgbw: [160, 10, 50], duration: 2000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [220, 40, 120], duration: 2000 },
+            { rgbw: [180, 80, 80], duration: 2000 },
+            { rgbw: [255, 20, 80], duration: 2000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [200, 60, 150], duration: 2500 },
+            { rgbw: [255, 100, 60], duration: 2500 },
+            { rgbw: [180, 30, 100], duration: 2500 },
+            { rgbw: [220, 80, 120], duration: 2500 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [180, 72], duration: 2500, easing: easeInOutSine },
+            { axis: [330, 82], duration: 2500, easing: easeInOutSine },
+          ],
+          colors: [80, 96], ledRing: [130, 120], gobo: 32,
+        },
+        {
+          moves: [
+            { axis: [130, 68], duration: 2500, easing: easeInOutSine },
+            { axis: [355, 86], duration: 2500, easing: easeInOutSine },
+            { axis: [225, 108], duration: 2500, easing: easeInOutSine },
+          ],
+          colors: [96, 80], ledRing: [120, 140], gobo: 48,
+        },
+        {
+          moves: [
+            { axis: [90, 62], duration: 2500, easing: easeInOutSine },
+            { axis: [400, 80], duration: 2500, easing: easeInOutSine },
+            { axis: [248, 68], duration: 2500, easing: easeInOutSine },
+            { axis: [110, 64], duration: 2500, easing: easeInOutSine },
+          ],
+          colors: [80, 16], ledRing: [150, 130], gobo: 16,
+        },
+      ],
+      mini: [
+        { ledRing: [70, 60], gobo: true, beam: 155, laser: 50, starfield: true, moves: [
+          { axis: [255, 60], duration: 2500 },
+          { axis: [405, 75], duration: 2500 },
+          { axis: [555, 60], duration: 2500 },
+          { axis: [405, 50], duration: 2500 },
+        ]},
+        { ledRing: [80, 90], gobo: true, beam: 145, laser: 45, starfield: true, moves: [
+          { axis: [210, 60], duration: 2500 },
+          { axis: [360, 75], duration: 2500 },
+          { axis: [510, 60], duration: 2500 },
+          { axis: [360, 50], duration: 2500 },
+        ]},
+        { ledRing: [100, 90], gobo: true, beam: 130, laser: 42, starfield: true, moves: [
+          { axis: [300, 60], duration: 2500 },
+          { axis: [450, 75], duration: 2500 },
+          { axis: [600, 60], duration: 2500 },
+          { axis: [450, 50], duration: 2500 },
+        ]},
+      ],
+    },
+  },
+
+  // Bright warm retro, medium-fast motor. Gold/orange/pink/white PAR at 300-400ms. Fun energetic
+  // cycling, not aggressive. Light gobo, prism on. Dance-floor nostalgia.
+  disco: {
+    luminous: { head: 230, mini: 245, par: 195 },
+    strobing: { threshold: 0.22, paceWeight: 0.32, energyWeight: 0.68, danceExp: 0.9 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 200, 0], duration: 350 },
+            { rgbw: [255, 120, 0], duration: 350 },
+            { rgbw: [255, 60, 160], duration: 350 },
+            { rgbw: [255, 255, 255, 60], duration: 350 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 0, 180], duration: 300 },
+            { rgbw: [255, 160, 20], duration: 300 },
+            { rgbw: [255, 240, 0], duration: 300 },
+            { rgbw: [255, 180, 120], duration: 300 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 240, 200, 80], duration: 400 },
+            { rgbw: [255, 80, 100], duration: 300 },
+            { rgbw: [255, 140, 0], duration: 350 },
+            { rgbw: [255, 210, 0], duration: 350 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [155, 70], duration: 650, easing: easeInOutSine },
+            { axis: [355, 85], duration: 650, easing: easeInOutSine },
+          ],
+          colors: [64, 80], ledRing: [190, 210], gobo: 80,
+        },
+        {
+          moves: [
+            { axis: [110, 68], duration: 600, easing: easeInOutSine },
+            { axis: [255, 84], duration: 600, easing: easeInOutSine },
+            { axis: [390, 72], duration: 600, easing: easeInOutSine },
+            { axis: [130, 66], duration: 600, easing: easeInOutSine },
+          ],
+          colors: [80, 96], ledRing: [200, 220], gobo: 96,
+        },
+        {
+          moves: [
+            { axis: [245, 76], duration: 650, easing: easeInSine },
+            { axis: [120, 64], duration: 650, easing: easeInSine },
+            { axis: [380, 90], duration: 650, easing: easeInSine },
+          ],
+          colors: [96, 64], ledRing: [210, 195], gobo: 112,
+        },
+      ],
+      mini: [
+        { ledRing: [190, 205], gobo: true, beam: 200, laser: 62, moves: [
+          { axis: [270, 35], duration: 650 },
+          { axis: [420, 60], duration: 650 },
+          { axis: [570, 35], duration: 650 },
+          { axis: [420, 15], duration: 650 },
+        ]},
+        { ledRing: [205, 220], gobo: true, beam: 215, laser: 68, moves: [
+          { axis: [225, 35], duration: 650 },
+          { axis: [375, 60], duration: 650 },
+          { axis: [525, 35], duration: 650 },
+          { axis: [375, 15], duration: 650 },
+        ]},
+        { ledRing: [175, 190], gobo: false, beam: 195, laser: 60, moves: [
+          { axis: [315, 35], duration: 650 },
+          { axis: [465, 60], duration: 650 },
+          { axis: [615, 35], duration: 650 },
+          { axis: [465, 15], duration: 650 },
+        ]},
+      ],
+    },
+  },
+
+  // Dark, slow, atmospheric. Deep purples/blues/dark reds. Very slow easeInOutSine drifts.
+  // Faint starfield, gobo on. Cinematic, smoky, introspective.
+  'trip-hop': {
+    luminous: { head: 160, mini: 180, par: 120 },
+    strobing: { threshold: 0.6, paceWeight: 0.2, energyWeight: 0.8, danceExp: 1.8 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [80, 0, 140], duration: 3000 },
+            { rgbw: [0, 30, 100], duration: 3000 },
+            { rgbw: [100, 0, 40], duration: 3000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [50, 0, 120], duration: 3500 },
+            { rgbw: [120, 0, 50], duration: 3500 },
+            { rgbw: [20, 20, 80], duration: 3500 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [100, 0, 160], duration: 3500 },
+            { rgbw: [0, 60, 80], duration: 3500 },
+            { rgbw: [140, 0, 80], duration: 3500 },
+            { rgbw: [30, 0, 100], duration: 3500 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [215, 82], duration: 3000, easing: easeInOutSine },
+            { axis: [295, 70], duration: 3000, easing: easeInOutSine },
+          ],
+          colors: [112, 48], ledRing: [70, 80], gobo: 32,
+        },
+        {
+          moves: [
+            { axis: [145, 90], duration: 2500, easing: easeInOutSine },
+            { axis: [340, 68], duration: 2500, easing: easeInOutSine },
+            { axis: [225, 80], duration: 2500, easing: easeInOutSine },
+          ],
+          colors: [48, 112], ledRing: [60, 72], gobo: 16,
+        },
+        {
+          moves: [
+            { axis: [195, 85], duration: 3500, easing: easeInOutSine },
+            { axis: [285, 70], duration: 3500, easing: easeInOutSine },
+            { axis: [155, 78], duration: 3500, easing: easeInOutSine },
+            { axis: [220, 84], duration: 3500, easing: easeInOutSine },
+          ],
+          colors: [96, 32], ledRing: [75, 65], gobo: 0,
+        },
+      ],
+      mini: [
+        { ledRing: [60, 70], gobo: true, beam: 100, laser: 28, starfield: true, moves: [
+          { axis: [255, 60], duration: 3000 },
+          { axis: [405, 75], duration: 3000 },
+          { axis: [555, 60], duration: 3000 },
+          { axis: [405, 50], duration: 3000 },
+        ]},
+        { ledRing: [50, 60], gobo: true, beam: 90, laser: 22, starfield: true, moves: [
+          { axis: [210, 60], duration: 3000 },
+          { axis: [360, 75], duration: 3000 },
+          { axis: [510, 60], duration: 3000 },
+          { axis: [360, 50], duration: 3000 },
+        ]},
+        { ledRing: [70, 80], gobo: true, beam: 105, laser: 32, starfield: true, moves: [
+          { axis: [300, 60], duration: 3000 },
+          { axis: [450, 75], duration: 3000 },
+          { axis: [600, 60], duration: 3000 },
+          { axis: [450, 50], duration: 3000 },
+        ]},
+      ],
+    },
+  },
+
+  // Extremely gentle, ethereal. Soft whites, pale blues, pale greens. Very slow 4-8s drifts.
+  // Zero strobing. Faint starfield adds cosmic depth without breaking stillness.
+  'new age': {
+    luminous: { head: 140, mini: 160, par: 100 },
+    strobing: { threshold: 0.99, paceWeight: 0.1, energyWeight: 0.9, danceExp: 3.0 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [120, 200, 255, 40], duration: 6000 },
+            { rgbw: [240, 250, 255, 80], duration: 6000 },
+            { rgbw: [100, 220, 180, 30], duration: 6000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [200, 240, 255, 60], duration: 7000 },
+            { rgbw: [120, 240, 200, 20], duration: 7000 },
+            { rgbw: [200, 200, 255, 50], duration: 7000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [230, 245, 255, 70], duration: 8000 },
+            { rgbw: [140, 210, 255, 30], duration: 8000 },
+            { rgbw: [160, 240, 200, 20], duration: 8000 },
+            { rgbw: [220, 235, 255, 60], duration: 8000 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [240, 76], duration: 5000, easing: easeInOutSine },
+            { axis: [270, 82], duration: 5000, easing: easeInOutSine },
+          ],
+          colors: [0, 48], ledRing: [82, 90], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [200, 80], duration: 6000, easing: easeInOutSine },
+            { axis: [310, 70], duration: 6000, easing: easeInOutSine },
+            { axis: [235, 82], duration: 6000, easing: easeInOutSine },
+          ],
+          colors: [48, 0], ledRing: [78, 88], gobo: 0,
+        },
+        {
+          moves: [
+            { axis: [215, 80], duration: 7000, easing: easeInOutSine },
+            { axis: [265, 72], duration: 7000, easing: easeInOutSine },
+            { axis: [230, 85], duration: 7000, easing: easeInOutSine },
+            { axis: [280, 76], duration: 7000, easing: easeInOutSine },
+          ],
+          colors: [0, 112], ledRing: [86, 94], gobo: 0,
+        },
+      ],
+      mini: [
+        { ledRing: [30, 40], gobo: true, beam: 60, laser: 18, starfield: true, moves: [
+          { axis: [320, 60], duration: 6000 },
+          { axis: [470, 75], duration: 6000 },
+          { axis: [620, 60], duration: 6000 },
+          { axis: [470, 50], duration: 6000 },
+        ]},
+        { ledRing: [20, 30], gobo: true, beam: 50, laser: 15, starfield: true, moves: [
+          { axis: [280, 60], duration: 7000 },
+          { axis: [430, 75], duration: 7000 },
+          { axis: [580, 60], duration: 7000 },
+          { axis: [430, 50], duration: 7000 },
+        ]},
+        { ledRing: [40, 50], gobo: true, beam: 65, laser: 22, starfield: true, moves: [
+          { axis: [350, 60], duration: 6500 },
+          { axis: [500, 75], duration: 6500 },
+          { axis: [650, 60], duration: 6500 },
+          { axis: [500, 50], duration: 6500 },
+        ]},
+      ],
+    },
+  },
+
+  // Slow swirling, rich saturated palette. Deep purples, vivid greens, electric blues, magenta.
+  // easeInOutSine throughout. Medium-high brightness. Moderate atmosphere-friendly laser.
+  psychedelic: {
+    luminous: { head: 220, mini: 240, par: 180 },
+    strobing: { threshold: 0.45, paceWeight: 0.25, energyWeight: 0.75, danceExp: 1.4 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [120, 0, 220], duration: 2000 },
+            { rgbw: [0, 200, 80], duration: 2000 },
+            { rgbw: [0, 80, 255], duration: 2000 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 0, 200], duration: 1800 },
+            { rgbw: [100, 0, 255], duration: 1800 },
+            { rgbw: [60, 220, 0], duration: 1800 },
+            { rgbw: [180, 0, 255], duration: 1800 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [0, 100, 255], duration: 2500 },
+            { rgbw: [255, 0, 160], duration: 2500 },
+            { rgbw: [80, 255, 0], duration: 2500 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [160, 72], duration: 2000, easing: easeInOutSine },
+            { axis: [360, 88], duration: 2000, easing: easeInOutSine },
+          ],
+          colors: [96, 48], ledRing: [170, 190], gobo: 128,
+        },
+        {
+          moves: [
+            { axis: [100, 60], duration: 2500, easing: easeInOutSine },
+            { axis: [420, 84], duration: 2500, easing: easeInOutSine },
+            { axis: [240, 108], duration: 2500, easing: easeInOutSine },
+          ],
+          colors: [48, 112], ledRing: [190, 210], gobo: 160,
+        },
+        {
+          moves: [
+            { axis: [255, 80], duration: 3000, easing: easeInOutSine },
+            { axis: [130, 96], duration: 3000, easing: easeInOutSine },
+            { axis: [400, 68], duration: 3000, easing: easeInOutSine },
+            { axis: [270, 82], duration: 3000, easing: easeInOutSine },
+          ],
+          colors: [112, 96], ledRing: [160, 180], gobo: 140,
+        },
+      ],
+      mini: [
+        { ledRing: [160, 180], gobo: true, beam: 180, laser: 55, starfield: true, moves: [
+          { axis: [310, 60], duration: 2000 },
+          { axis: [460, 75], duration: 2000 },
+          { axis: [610, 60], duration: 2000 },
+          { axis: [460, 50], duration: 2000 },
+        ]},
+        { ledRing: [180, 200], gobo: true, beam: 195, laser: 62, starfield: true, moves: [
+          { axis: [270, 60], duration: 2500 },
+          { axis: [420, 75], duration: 2500 },
+          { axis: [570, 60], duration: 2500 },
+          { axis: [420, 50], duration: 2500 },
+        ]},
+        { ledRing: [140, 160], gobo: true, beam: 170, laser: 50, starfield: true, moves: [
+          { axis: [340, 60], duration: 2200 },
+          { axis: [490, 75], duration: 2200 },
+          { axis: [640, 60], duration: 2200 },
+          { axis: [490, 50], duration: 2200 },
+        ]},
+      ],
+    },
+  },
+
+  // Explosive, very high brightness. Very fast easeInExpo snaps. White/yellow/cyan PAR bursts.
+  // High strobe rate. No starfield — too fast for atmosphere.
+  energetic: {
+    luminous: { head: 255, mini: 255, par: 210 },
+    strobing: { threshold: 0.12, paceWeight: 0.42, energyWeight: 0.58, danceExp: 0.7 },
+    variants: {
+      par: [
+        {
+          colors: [
+            { rgbw: [255, 255, 255, 100], duration: 200 },
+            { rgbw: [0, 255, 255], duration: 300 },
+            { rgbw: [255, 240, 0], duration: 300 },
+            { rgbw: [255, 255, 255, 80], duration: 150 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [255, 255, 0], duration: 250 },
+            { rgbw: [255, 255, 255, 120], duration: 150 },
+            { rgbw: [0, 180, 255], duration: 300 },
+            { rgbw: [255, 255, 255, 100], duration: 100 },
+          ]
+        },
+        {
+          colors: [
+            { rgbw: [0, 255, 220], duration: 300 },
+            { rgbw: [255, 220, 0], duration: 300 },
+            { rgbw: [255, 255, 255, 80], duration: 150 },
+            { rgbw: [180, 255, 0], duration: 250 },
+          ]
+        },
+      ],
+      head: [
+        {
+          moves: [
+            { axis: [80, 56], duration: 350, easing: easeInExpo },
+            { axis: [455, 68], duration: 350, easing: easeInExpo },
+          ],
+          colors: [0, 48], ledRing: [240, 255], gobo: 32,
+        },
+        {
+          moves: [
+            { axis: [60, 56], duration: 380, easing: easeInExpo },
+            { axis: [445, 72], duration: 380, easing: easeInExpo },
+            { axis: [245, 60], duration: 380, easing: easeInExpo },
+          ],
+          colors: [48, 0], ledRing: [230, 250], gobo: 16,
+        },
+        {
+          moves: [
+            { axis: [40, 60], duration: 300, easing: easeInExpo },
+            { axis: [470, 56], duration: 300, easing: easeInExpo },
+            { axis: [280, 68], duration: 300, easing: easeInExpo },
+            { axis: [65, 58], duration: 300, easing: easeInExpo },
+          ],
+          colors: [0, 16], ledRing: [250, 240], gobo: 48,
+        },
+      ],
+      mini: [
+        { ledRing: [220, 240], gobo: false, beam: 230, laser: 72, moves: [
+          { axis: [270, 35], duration: 300 },
+          { axis: [420, 60], duration: 300 },
+          { axis: [570, 35], duration: 300 },
+          { axis: [420, 15], duration: 300 },
+        ]},
+        { ledRing: [230, 215], gobo: false, beam: 240, laser: 78, moves: [
+          { axis: [225, 35], duration: 300 },
+          { axis: [375, 60], duration: 300 },
+          { axis: [525, 35], duration: 300 },
+          { axis: [375, 15], duration: 300 },
+        ]},
+        { ledRing: [200, 220], gobo: true, beam: 220, laser: 75, moves: [
+          { axis: [315, 35], duration: 300 },
+          { axis: [465, 60], duration: 300 },
+          { axis: [615, 35], duration: 300 },
+          { axis: [465, 15], duration: 300 },
+        ]},
       ],
     },
   },
@@ -1426,11 +2618,12 @@ export const ProfileConfigs: Record<string, Profile> = {
           colors: [48, 96], ledRing: [160, 172], gobo: 32,
         },
         {
-          // Far-left (100°) → far-right (420°) → center (255°), tilt 62→84→110. Full stage sweep, climbs to ceiling-high center.
+          // Far-left (100°) → far-right (420°) → center (255°) → return (130°), tilt 62→84→110→68. Full stage sweep, climbs to ceiling-high center, returns left.
           moves: [
             { axis: [100, 62], duration: 1600, easing: easeInOutSine },
             { axis: [420, 84], duration: 1600, easing: easeInOutSine },
             { axis: [255, 110], duration: 1600, easing: easeInOutSine },
+            { axis: [130, 68], duration: 1600, easing: easeInOutSine },
           ],
           colors: [96, 48], ledRing: [196, 214], gobo: 48,
         },
@@ -1446,15 +2639,24 @@ export const ProfileConfigs: Record<string, Profile> = {
         },
       ],
       mini: [
-        {
-          ledRing: [210, 200], gobo: true, beam: 150, laser: 80,
-        },
-        {
-          ledRing: [40, 50], gobo: true, beam: 170, laser: 80,
-        },
-        {
-          ledRing: [220, 230], gobo: false, beam: 160, laser: 80,
-        },
+        { ledRing: [210, 200], gobo: true, beam: 150, laser: 60, moves: [
+          { axis: [255, 35], duration: 1500 },
+          { axis: [405, 60], duration: 1500 },
+          { axis: [555, 35], duration: 1500 },
+          { axis: [405, 15], duration: 1500 },
+        ]},
+        { ledRing: [40, 50], gobo: true, beam: 170, laser: 65, moves: [
+          { axis: [210, 35], duration: 1500 },
+          { axis: [360, 60], duration: 1500 },
+          { axis: [510, 35], duration: 1500 },
+          { axis: [360, 15], duration: 1500 },
+        ]},
+        { ledRing: [220, 230], gobo: true, beam: 160, laser: 55, moves: [
+          { axis: [300, 35], duration: 1500 },
+          { axis: [450, 60], duration: 1500 },
+          { axis: [600, 35], duration: 1500 },
+          { axis: [450, 15], duration: 1500 },
+        ]},
       ],
     },
   },
@@ -1465,7 +2667,7 @@ export const ProfileConfigs: Record<string, Profile> = {
       mini: 230,
       par: 165
     },
-    strobing: { threshold: 0.99 },
+    strobing: { threshold: 0.99, energyWeight: 0.6 },
     variants: {
       head: [
         {
@@ -1481,7 +2683,8 @@ export const ProfileConfigs: Record<string, Profile> = {
         {
           beam: 255,
           laser: 0,
-          ledRing: [40]
+          ledRing: [40],
+          moves: [{ axis: [255, 90], duration: 100 }]
         }
       ],
       par: [
@@ -1496,3 +2699,5 @@ export const ProfileConfigs: Record<string, Profile> = {
     }
   }
 }
+
+

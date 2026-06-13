@@ -1,11 +1,11 @@
 import { clamp, random, sample, shuffle, toLower } from "lodash";
-import { ActivationTag } from "./analysis/analysis-manager";
+import { ActivationTag } from "./analysis/analysis-client";
 import { Animation } from "./fixtures/animation";
 import { Fixture } from "./fixtures/fixture";
 import { easeInExpo, easeInOutSine } from "./utils/easing";
 import { ProfileConfigs } from "./profiles/configs";
 import { MiniVariant, Profile } from "./profiles/types";
-import { GroupTagToProfileMap, TagsToProfileMap } from "./profiles/mapping";
+import { GenreTagToProfileMap, ProfileMoodOverrideMap, MOOD_OVERRIDE_THRESHOLD, MOOD_WILDCARD_THRESHOLD } from "./profiles/mapping";
 import { ParamStore } from "./params";
 
 export type AnimatorOptions = {
@@ -29,10 +29,15 @@ export class Animator {
 
   #strobing = false;
   #strobingWeight = 0;
+  #strobingMoodBoost = 1.0;
   #lastStrobingCheck = 0;
 
   #profileName = '';
   #profile = ProfileConfigs['idle'];
+
+  #currentGenre = '';
+  #currentMood = '';
+  #currentMoodScore = 0;
   #variants: Profile['variants'] = {
     par: [],
     head: [],
@@ -188,7 +193,7 @@ export class Animator {
 
     anim.clear()
       .add({ push: [channelId] })
-      .add({ to: [[channelId, (v) => v * factor * (1 + this.#dance)]], duration })
+      .add({ to: [[channelId, (v) => v * factor * (0.6 + this.#dance)]], duration })
       .add({ to: [[channelId, (v, anim) => anim.pop(channelId) ?? v]], duration })
   }
 
@@ -309,9 +314,7 @@ export class Animator {
       const tiltOffset = { main: this.#params.tiltOffset('head') * 127, mini: this.#params.tiltOffset('mini') * 127 };
 
       for (const { axis, duration, easing } of moves) {
-        // factors
         const [pan, tilt] = [[axis[0], 540], [axis[1], 180]].map(([deg, max]) => deg / max);
-
         const stepDuration = this.#quantizeDuration(duration * (1 - this.#pace) * (1 - this.#energy));
         const easingFn = this.#moveEasing(easing);
 
@@ -323,16 +326,23 @@ export class Animator {
           duration: stepDuration,
           easing: easingFn
         });
+      }
 
-        // Mirror the main head
-        this.#headMoveAnim.mini.add({
-          to: [
-            ['pan', 255 - pan * 255],
-            ['tilt', clamp(255 - tilt * 255 + tiltOffset.mini, 0, 255)]
-          ],
-          duration: stepDuration * 2,
-          easing: easeInOutSine
-        });
+      if (miniVariant) {
+        for (const { axis, duration, easing } of miniVariant.moves) {
+          const [pan, tilt] = [[axis[0], 540], [axis[1], 180]].map(([deg, max]) => deg / max);
+          const stepDuration = this.#quantizeDuration(duration * (1 - this.#pace) * (1 - this.#energy));
+          const easingFn = this.#moveEasing(easing);
+
+          this.#headMoveAnim.mini.add({
+            to: [
+              ['pan', pan * 255],
+              ['tilt', clamp(tilt * 255 + tiltOffset.mini, 0, 255)]
+            ],
+            duration: stepDuration,
+            easing: easingFn
+          });
+        }
       }
 
       this.#headMoveAnim.main
@@ -340,7 +350,7 @@ export class Animator {
         .once('end', nextMove);
 
       this.#headMoveAnim.mini
-        .start()
+        .start({ loop: true })
 
     }
 
@@ -353,7 +363,7 @@ export class Animator {
   }
 
   #updateFlashAnims() {
-    this.#makeFlashAnim(this.#flashAnim.par, 'master', 1.5);
+    this.#makeFlashAnim(this.#flashAnim.par, 'master', 1.3);
     this.#makeFlashAnim(this.#flashAnim.main, 'luminous', 1.5);
     this.#makeFlashAnim(this.#flashAnim.mini, 'luminous', 1.5);
   }
@@ -468,13 +478,29 @@ export class Animator {
 
     const pace = clamp((this.#bpm - 95) / (150 - 95), 0, 1) * 0.5 + 0.5; // 95bpm=0.5, 150bpm=1.0
     const energy2 = this.#bpm >= 105 ? this.#energy ** 3 : this.#energy * pace;
-    const weight = (paceWeight * pace + energyWeight * energy2) * this.#dance ** danceExp;
+    const weight = (paceWeight * pace + energyWeight * energy2) * this.#dance ** danceExp * this.#strobingMoodBoost;
 
     // Fast attack on spikes, ~1-bar (4-beat) decay
     const alpha = weight > this.#strobingWeight ? Math.min(1, weight * 2) : 0.75;
     this.#strobingWeight = alpha * weight + (1 - alpha) * this.#strobingWeight;
 
     this.#strobing = this.#strobingWeight >= threshold;
+  }
+
+  #updateStrobingMoodBoost(mood: string, score: number) {
+    const target = ({
+      energetic: 1.5, action: 1.5, fast: 1.5, sport: 1.5,
+      powerful: 1.3, epic: 1.3,
+      dramatic: 1.2, heavy: 1.2,
+      upbeat: 1.1, uplifting: 1.1,
+      sad: 0.7, melancholic: 0.7, emotional: 0.7,
+      calm: 0.5, relaxing: 0.5, soft: 0.5, slow: 0.5,
+      meditative: 0.4, dream: 0.4, deep: 0.4, space: 0.4,
+    } as Record<string, number>)[mood] ?? 1.0;
+
+    // blend toward target weighted by mood score, slow EMA (~8s decay)
+    const alpha = 0.05 * score;
+    this.#strobingMoodBoost = alpha * target + (1 - alpha) * this.#strobingMoodBoost;
   }
 
   #heartbeat() {
@@ -500,26 +526,71 @@ export class Animator {
     }
   }
 
-  updateTag(tag: ActivationTag) {
-    const [groupName, subGroupName] = [tag.parentGenre, tag.name].map(toLower);
-    const group = TagsToProfileMap[groupName] as Record<string, string>;
-    const profileName = group?.[subGroupName] ?? GroupTagToProfileMap[groupName] ?? groupName;
+  updateGenre(tags: ActivationTag[]) {
+    // weighted vote: each tag votes for its mapped profile weighted by score
+    const votes = new Map<string, number>();
+    for (const tag of tags) {
+      const profile = GenreTagToProfileMap[toLower(tag.name)];
+      if (profile) votes.set(profile, (votes.get(profile) ?? 0) + tag.score);
+    }
+    if (!votes.size) return;
+    const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    console.log('[genre]', [...votes.entries()].map(([p, s]) => `${p}:${s.toFixed(2)}`).join(' '));
+    this.#currentGenre = best;
+    this.#resolveProfile();
+  }
 
-    if (profileName === this.#profileName) {
-      return;
+  updateMood(tags: ActivationTag[]) {
+    const votes = new Map<string, number>();
+    for (const tag of tags) {
+      const name = toLower(tag.name);
+      votes.set(name, (votes.get(name) ?? 0) + tag.score);
+    }
+    if (!votes.size) return;
+    const sorted = [...votes.entries()].sort((a, b) => b[1] - a[1]);
+    const [bestMood, bestScore] = sorted[0];
+    console.log('[mood]', sorted.map(([m, s]) => `${m}:${s.toFixed(2)}`).join(' '));
+    this.#currentMood = bestMood;
+    this.#currentMoodScore = bestScore;
+    // modulate strobing for all top moods, weighted by score
+    for (const [mood, score] of sorted) {
+      this.#updateStrobingMoodBoost(mood, score);
+    }
+    this.#resolveProfile();
+  }
+
+  #resolveProfile() {
+    const base = this.#currentGenre;
+    const mood = this.#currentMood;
+    const score = this.#currentMoodScore;
+
+    let resolved = base || 'default';
+
+    if (mood && score >= MOOD_OVERRIDE_THRESHOLD) {
+      const specific = ProfileMoodOverrideMap[`${resolved}+${mood}`];
+      if (specific) {
+        resolved = specific;
+      } else if (score >= MOOD_WILDCARD_THRESHOLD) {
+        const wildcard = ProfileMoodOverrideMap[`*+${mood}`];
+        if (wildcard) resolved = wildcard;
+      }
     }
 
-    console.log('Update Tag', profileName);
-    this.#profileName = profileName;
+    this.#setProfile(resolved);
+  }
+
+  #setProfile(profileName: string) {
+    if (profileName === this.#profileName) return;
 
     const profile = ProfileConfigs[profileName] ?? ProfileConfigs['default'];
-    if (profile && profile !== this.#profile) {
-      this.#applyProfile(profile);
-    }
+    if (!profile || profile === this.#profile) return;
+
+    console.log('[profile]', profileName);
+    this.#profileName = profileName;
+    this.#applyProfile(profile);
   }
 
   #applyProfile(profile: Profile) {
-    console.log('Apply profile');
     this.#profile = profile;
 
     this.#variants = {
