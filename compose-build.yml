@@ -1,0 +1,7 @@
+services:
+  analyzer:
+    image: prismabeam-analyzer
+    build: ./analyzer
+  prismabeam:
+    image: prismabeam
+    build: .
