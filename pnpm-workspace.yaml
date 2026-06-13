@@ -2,12 +2,11 @@ packages:
   - .
   - ui
 
-ignoreWorkspaceRootCheck: true
-
 allowBuilds:
   '@serialport/bindings-cpp': true
   '@tensorflow/tfjs-node': true
   core-js: true
+  esbuild: true
   koffi: true
 
 allowedDeprecatedVersions:
@@ -19,8 +18,11 @@ allowedDeprecatedVersions:
   rimraf: "*"
   tar: "*"
 
+ignoreWorkspaceRootCheck: true
+
 onlyBuiltDependencies:
   - '@serialport/bindings-cpp'
   - '@tensorflow/tfjs-node'
   - core-js
+  - esbuild
   - koffi
