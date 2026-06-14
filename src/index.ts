@@ -14,6 +14,9 @@ import { Animator } from './animator';
 import { ParamStore } from './params';
 import { createWsServer } from './server';
 
+export type { BroadcastMessage, Snapshot } from './server';
+export type { ActivationTag } from './analysis/analysis-client';
+
 process.on('uncaughtException', e => console.error('uncaughtException', e));
 process.on('unhandledRejection', e => console.error('unhandledRejection', e));
 
@@ -164,7 +167,16 @@ async function main() {
       danceability,
       energy
     });
-  }, 1000 / 10)
+  }, 1000 / 10);
+
+  setInterval(() => {
+    broadcast({
+      type: 'tags',
+      profile: animator.getProfileName(),
+      tags,
+      moods
+    })
+  }, 1000);
 }
 
 main();

@@ -1,26 +1,14 @@
 ﻿<script lang="ts">
+  import { onMount } from "svelte";
   import Fader from "./components/Fader.svelte";
   import Knob from "./components/Knob.svelte";
   import MiniChart from "./components/MiniChart.svelte";
   import ToggleButton from "./components/ToggleButton.svelte";
+  import type { ActivationTag, BroadcastMessage, Snapshot } from 'prismabeam';
+  import TagsChart from "./components/TagsChart.svelte";
 
-  type Light = {
-    luminosity: number;
-    enabled: boolean;
-  };
 
-  type MovingHead = Light & {
-    tiltOffset: number; // -1 = toward 0°, 0 = no offset, 1 = toward 180°
-  };
-
-  type State = {
-    head: MovingHead;
-    mini: MovingHead;
-    par: Light;
-    kickDelay: number;
-  };
-
-  let _state = $state<State>({
+  let _state = $state<Snapshot>({
     head: { luminosity: 1, enabled: true, tiltOffset: 0 },
     mini: { luminosity: 1, enabled: true, tiltOffset: 0 },
     par: { luminosity: 1, enabled: true },
@@ -32,6 +20,9 @@
   let bpmPoints = $state<number[]>([]);
   let danceabilityPoints = $state<number[]>([]);
   let energyPoints = $state<number[]>([]);
+  let tags = $state<ActivationTag[]>([]);
+  let moods = $state<ActivationTag[]>([]);
+  let profile = $state<string>();
 
   const websocketUrl = location.protocol.replace('http', 'ws') + '//' + location.host + '/ws';
   let ws: WebSocket;
@@ -52,11 +43,11 @@
     };
 
     ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
+      const msg = JSON.parse(e.data) as BroadcastMessage;
 
       switch (msg.type) {
-        case 'state':
-          _state = msg.state;
+        case 'snapshot':
+          _state = msg.snapshot;
           break;
 
         case 'update': {
@@ -68,6 +59,8 @@
 
           o[msg.param] = msg.value;
         }
+
+        break;
 
         case 'stats': {
           const { bpm, danceability, energy } = msg;
@@ -82,11 +75,19 @@
           append(danceabilityPoints, danceability);
           append(energyPoints, energy);
         }
+
+        break;
+
+        case 'tags': {
+          tags = msg.tags;
+          moods = msg.moods;
+          profile = msg.profile;
+        }
+
+        break;
       }
     };
   }
-
-  connect();
 
   function sendFixture(param: string, key: string, value: number | boolean) {
     if (ws.readyState !== WebSocket.OPEN) {
@@ -95,12 +96,20 @@
 
     ws.send(JSON.stringify({ action: "set", set: { param, key, value } }));
   }
+
+  onMount(() => {
+    connect();
+
+    return () => {
+      ws?.close();
+    }
+  })
 </script>
 
 <main>
   <div class="container">
     <section class="fixtures">
-      <div class="strip">
+      <div class="strip" style="width: 6.5em">
         <div class="label">Ctrls</div>
         <div class="toggle">
           <ToggleButton
@@ -156,6 +165,23 @@
               max={1.5}
               format={v => `Energy: ${(v * 100).toFixed(2)}%`}
             />
+          </div>
+        </div>
+
+        <div style="font-size: 1rem; display: flex; flex-direction: column; gap: 1.4em">
+          <div style="height: 6em">
+            Tags
+            <TagsChart data={tags} color="hsl(0 88% 40% / 0.8)" />
+          </div>
+
+          <div style="height: 6em">
+            Moods
+            <TagsChart data={moods} color="hsl(90 88% 40% / 0.8)" />
+          </div>
+
+          <div>
+            Profile
+            <div style="font-size: 0.8em">{profile}</div>
           </div>
         </div>
       </div>
@@ -257,8 +283,10 @@
   }
 
   .chart {
-    width: 4em;
-    height: 2em;
+    display: flex;
+    justify-self: center;
+    width: 4.8em;
+    height: 2.4em;
   }
 
   .status {

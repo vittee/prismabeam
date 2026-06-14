@@ -3,7 +3,8 @@ import http, { IncomingMessage } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { z } from 'zod';
 import { match, P } from 'ts-pattern';
-import { Params, ParamStore } from './params';
+import { ParamStore, type Params } from './params';
+import type { ActivationTag } from './analysis/analysis-client';
 
 const Fixtures = z.enum(['head', 'mini', 'par']);
 
@@ -38,6 +39,50 @@ const Message = z.discriminatedUnion('action', [
   SetAction
 ]);
 
+type Light = {
+  luminosity: number;
+  enabled: boolean;
+};
+
+type MovingHead = Light & {
+  tiltOffset: number; // -1 = toward 0°, 0 = no offset, 1 = toward 180°
+};
+
+export type Snapshot = {
+  head: MovingHead;
+  mini: MovingHead;
+  par: Light;
+  kickDelay: number;
+};
+
+type SnapshotMessage = {
+  type: 'snapshot';
+  snapshot: Snapshot;
+}
+
+type UpdateMessage = {
+  type: 'update';
+  param: string;
+  key?: string;
+  value: any;
+}
+
+type StatsMessage = {
+  type: 'stats';
+  bpm: number;
+  danceability: number;
+  energy: number;
+}
+
+type TagsMessage = {
+  type: 'tags';
+  profile: string;
+  tags: ActivationTag[];
+  moods: ActivationTag[];
+}
+
+export type BroadcastMessage = SnapshotMessage | UpdateMessage | StatsMessage | TagsMessage;
+
 export function createWsServer(httpServer: http.Server, params: ParamStore) {
   const server = new WebSocketServer({
     noServer: true,
@@ -58,7 +103,7 @@ export function createWsServer(httpServer: http.Server, params: ParamStore) {
     server.handleUpgrade(req, socket, head, (socket) => {
       sockets.add(socket);
 
-      socket.send(JSON.stringify({ type: 'state', state: snapshot() }));
+      socket.send(JSON.stringify({ type: 'snapshot', snapshot: snapshot() } satisfies SnapshotMessage));
 
       socket
         .on('close', () => {
@@ -93,7 +138,7 @@ export function createWsServer(httpServer: http.Server, params: ParamStore) {
     });
   });
 
-  const broadcast = (data: object) => {
+  const broadcast = (data: BroadcastMessage) => {
     const msg = JSON.stringify(data);
 
     for (const client of sockets) {
