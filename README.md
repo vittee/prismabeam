@@ -1,9 +1,9 @@
 # Prisma Beam
 
-Real-time DMX lighting controller that reacts to live audio. It detects BPM,
-danceability, energy, kick transients, and genre from two concurrent UDP audio
-streams, then drives two moving-head fixtures and a PAR light to match the
-music — with per-genre colour palettes, movement profiles, flash-on-kick, and
+Real-time DMX lighting controller that reacts to live audio. Detects BPM,
+danceability, energy, kick transients, genre, and mood from a UDP audio stream,
+then drives two moving-head fixtures and a PAR light to match the music —
+with per-genre/mood colour palettes, movement profiles, flash-on-kick, and
 auto-strobe.
 
 ---
@@ -21,131 +21,163 @@ auto-strobe.
 
 ## How It Works
 
-Two UDP sockets receive PCM audio simultaneously from an external player:
+One UDP socket receives 48 kHz stereo PCM from an external audio player:
 
-| Socket env var | Default port | PCM format | Sample rate | Purpose |
-|---|---|---|---|---|
-| `TAGGING_PORT` | `7440` | FloatLE stereo | 16 000 Hz | Genre classification |
-| `AUDIO_PORT` | `7441` | FloatLE stereo | 48 000 Hz | BPM, danceability, energy, kick |
+| Env var | Default port | PCM format | Sample rate |
+|---|---|---|---|
+| `AUDIO_PORT` | `7441` | FloatLE stereo | 48 000 Hz |
 
 ### Signal chain
 
 ```
-UDP:7440 (16 kHz FloatLE stereo)
-    │
-    └─► AnalysisManager  (analysis-worker.js)
-            FeatureExtractor → EssentiaTFInputExtractor "musicnn"
-                               512-sample frame, 256-sample hop, 96 mel bands
-                               128-frame patches → MusicNN (model-tfjs/model.json)
-                               Top-5 activations, 8-frame median per tag
-                               → genre tag emitted as ActivationTag
-                               
 UDP:7441 (48 kHz FloatLE stereo)
     │
-    ├─► EnergyDetector  (energy-worker.js — Essentia WASM)
-    │       Band-pass 20–150 Hz → Spectrum (2048-sample frame, 256-sample hop)
+    ├─► EnergyDetector
+    │       Band-pass 20–150 Hz → Spectrum (2048-sample frame, 512-sample hop)
     │       RMS ODF → energy level  (~50 ms cadence, 4-sample median)
     │       Local ODF peak-pick     → kick onset (150 ms minimum gap)
     │
-    └─► AnalysisManager  (analysis-worker.js — Essentia + TF.js WASM)
-            BpmDetector  → PercivalBpmEstimator (8 s window, 2 s hop, 44 100 Hz)
-                           BPM range 40–220, 4-sample median smoothing
-            Danceability → Essentia Danceability ÷ 3  (normalised 0–1)
+    ├─► BpmDetector
+    │       PercivalBpmEstimator (8 s window, 2 s hop, 48 000 Hz)
+    │       Danceability (Essentia, normalised 0–1)
+    │       Meter correction + BPM fold into 90–160 sweet spot
+    │
+    └─► ML subprocess  (Python multiprocessing)
+            Resample 48 kHz → 16 kHz (Essentia)
+            TensorflowPredictEffnetDiscogs  (discogs-effnet embedding)
+            Genre head  → mtg_jamendo_genre    (top-5, 8-frame smoothing)
+            Mood head   → mtg_jamendo_moodtheme (top-5, 8-frame smoothing)
+            Inference every 1 s over a 3 s rolling window
 
-Animator
-    Inputs: bpm, danceability, energy, kick, ActivationTag
-    ├─ Tag → Profile via TagsToProfileMap / GroupTagToProfileMap
+Animator (Node.js)
+    Inputs: bpm, danceability, energy, kick, genre tags, mood tags
+    ├─ Genre + mood → profile via GenreBlendMap / MoodBlendMap / GenreMoodAliasMap
     ├─ PAR colour animation  (easeInOutSine, BPM-quantised durations)
     ├─ Head move animation   (easeInExpo or easeInOutSine by danceability)
     ├─ Luminous animation    (200 ms fade, modulated by energy)
     ├─ Flash animation       (triggered on every kick event)
-    └─ Strobe animation      (auto-activated: pace × energy × danceability weight)
+    └─ Strobe animation      (auto-activated: pace × energy × danceability weight,
+                               MoodStrobingBoost per active mood)
 
 DMX transport
     SerialPort: 250 000 baud, 8N2
-    Update rate: 40 Hz    
+    Update rate: 40 Hz
+
+Web UI  (Svelte 5, served on HTTP_PORT)
+    Real-time stats: BPM, danceability, energy charts
+    Tags/moods display with score bars
+    Active profile name
+    Per-fixture controls: luminosity, enable/disable, tilt offset, kick delay
 ```
+
+### Models
+
+Three TensorFlow protobuf models are downloaded at Docker build time:
+
+| Model | Source |
+|---|---|
+| `discogs_multi_embeddings-effnet-bs64-1.pb` | Essentia discogs-effnet feature extractor |
+| `mtg_jamendo_genre-discogs_multi_embeddings-effnet-1.pb` | Genre classification head |
+| `mtg_jamendo_moodtheme-discogs_multi_embeddings-effnet-1.pb` | Mood classification head |
 
 ---
 
 ## Prerequisites
 
-- Node.js 20 or later
-- pnpm
-- A USB-to-DMX adapter detected as VID `0403` / PID `6001` (e.g., Enttec Open
-  DMX USB or compatible FTDI chip). On Linux, any `/dev/ttyUSB*` device is
-  used as a fallback.
-- The three fixtures wired and addressed as described in
-  [Fixture Reference](#fixture-reference).
-
-Three dependencies contain native C++ code and are compiled during install:
-
-| Package | Purpose |
-|---|---|
-| `@serialport/bindings-cpp` | Serial port access |
-| `@tensorflow/tfjs-node` | TensorFlow native binding |
-| `koffi` | FFI for Windows `kernel32.dll` / Linux `libc` break signal |
+- Docker
+- Node.js 20+ and pnpm
+- A USB-to-DMX adapter detected as VID `0403` / PID `6001` (e.g. Enttec Open
+  DMX USB or compatible FTDI chip). On Linux, any `/dev/ttyUSB*` is used as fallback.
+- The three fixtures wired and addressed as described in [Physical Setup](#physical-setup).
 
 ---
 
 ## Installation
 
+Build both Docker images:
+
 ```bash
-pnpm install
+pnpm docker
 ```
 
-The `postinstall` script (`scripts/postinstall.mjs`) copies TensorFlow native
-library files (`.dll` / `.so`) from `node_modules/@tensorflow/tfjs-node/deps/lib`
-into the platform-specific subdirectory of
-`node_modules/@tensorflow/tfjs-node/lib` so the native addon can locate them.
-
-The MusicNN model is already bundled in `model-tfjs/` (11 weight shards +
-`model.json`). No separate model download is needed.
+This produce 2 docker images:
+- `prismabeam-analyzer` — Python audio analysis service
+- `prismabeam` — Node.js DMX controller + Web UI
 
 ---
 
 ## Running
 
-Start the full controller — audio analysis and DMX output:
+Create a `compose.yml` and start both services:
+
+```yaml
+services:
+  analyzer:
+    image: prismabeam-analyzer
+    ports:
+      - "7441:7441/udp"
+      - "7442:7442/tcp"
+
+  prismabeam:
+    image: prismabeam
+    ports:
+      - "7400:7400/tcp"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    environment:
+      ANALYZER_HOST: analyzer
+    depends_on:
+      - analyzer
+```
 
 ```bash
-pnpm start
+docker compose up
 ```
 
-On startup you will see:
+### USB-DMX adapter on Windows
 
-```
-Found device: COM3          # or /dev/ttyUSB0 on Linux
-Listening — audio:7441 audio-tagging:7440
-[EnergyDetector] worker ready
-```
+Docker Desktop on Windows cannot pass through USB devices directly. Use
+**WSL USB Manager** (part of [WSL Dashboard](https://github.com/bostrot/wsl2-distro-manager))
+or **usbipd-win** to attach the USB-DMX adapter into the WSL2 / Docker context:
 
-Then feed the audio into UDP ports using FFMpeg
-```sh
-ffmpeg -re -i file.mp3 -map 0:a:0 \
-   -f f32le -ac 2 -ar 16000 -acodec pcm_f32le udp://127.0.0.1:7440 \
-   -f f32le -ac 2 -ar 48000 -acodec pcm_f32le udp://127.0.0.1:7441 
-```
+1. Install [usbipd-win](https://github.com/dorssel/usbipd-win).
+2. Open PowerShell as Administrator and list devices:
+   ```powershell
+   usbipd list
+   ```
+3. Share and attach the adapter (replace `<BUSID>` with the one shown for your FTDI device):
+   ```powershell
+   usbipd bind --busid <BUSID>
+   usbipd attach --wsl --busid <BUSID>
+   ```
+4. Verify inside WSL: `ls /dev/ttyUSB*` — the device should appear.
+5. Run `docker compose up` from within WSL.
 
-Once audio arrives on the UDP ports, BPM and danceability values are logged as
-they update:
+Alternatively, open WSL Dashboard → **USB Devices** tab, find the FTDI adapter, and click **Attach**. Then run compose from WSL.
 
-```
-BPM 128
-Danceability 0.72
-Update Tag house / techno / trance
-Apply profile
-```
+### Environment variables
 
-### Development / fixture test
+**Analyzer (`prismabeam-analyzer`)**
+
+| Var | Default | Description |
+|---|---|---|
+| `AUDIO_PORT` | `7441` | UDP port for incoming PCM audio |
+| `ANALYSIS_PORT` | `7442` | TCP port for analysis result stream |
+
+**DMX controller (`prismabeam`)**
+
+| Var | Default | Description |
+|---|---|---|
+| `PORT` | `7400` | HTTP port for the web UI |
+| `ANALYZER_HOST` | *(required)* | Analyzer container hostname |
+| `ANALYZER_PORT` | `7442` | Analyzer TCP port |
+
+### Feed audio
 
 ```bash
-pnpm dev
+ffmpeg -re -i file.mp3 \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
 ```
-
-Runs `ts-node src/poc-dmx.ts` — opens the DMX port, sets a fixed static scene
-on all three fixtures, and plays a brief strobe burst on the beam spot. Useful
-for confirming the USB adapter and fixture wiring without audio.
 
 ---
 
@@ -168,6 +200,8 @@ across the back wall and ceiling.
        [  people  ]
        [  people  ]
 ```
+
+---
 
 ## Safety
 
