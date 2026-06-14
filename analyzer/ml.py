@@ -12,12 +12,14 @@ _MIN_SECONDS = 3.0
 _HOP_SECONDS = 1.0
 
 
+_MOOD_EXCLUDE = frozenset({'christmas', 'melodic'})
+
 def _top5(scores: np.ndarray, labels: list[str]) -> list[dict]:
     lo, hi = float(scores.min()), float(scores.max())
     rng = hi - lo
     normalized = (scores - lo) / rng if rng > 0 else scores
     indexed = sorted(enumerate(normalized), key=lambda x: -x[1])[:5]
-    return [{'name': labels[i], 'score': float(s)} for i, s in indexed if i < len(labels)]
+    return [{'name': labels[i], 'score': float(s)} for i, s in indexed if i < len(labels) and labels[i] not in _MOOD_EXCLUDE]
 
 
 class MultiHeadTagger:
