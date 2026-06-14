@@ -25,7 +25,7 @@ class EnergyDetector:
         self._lock = threading.Lock()
 
         self._frame_size = 2048
-        self._hop_size = 256
+        self._hop_size = 512
         self._min_gap_hops = math.ceil((sample_rate * 0.15) / self._hop_size)
         self._energy_interval_hops = max(1, round((sample_rate * 0.05) / self._hop_size))
 

@@ -68,6 +68,14 @@ class BpmDetector:
         self._buf_filled = False
         self._samples_since_hop = 0
 
+        self._percival = es.PercivalBpmEstimator(
+            frameSize=1024, frameSizeOSS=2048, hopSize=128, hopSizeOSS=256,
+            maxBPM=210, minBPM=50, sampleRate=self._sr,
+        )
+        self._danceability = es.Danceability(
+            maxTau=8800, minTau=310, sampleRate=float(self._sr), tauMultiplier=1.1
+        )
+
         # BpmEstimator smoothing state
         self._history: list[float] = []
         self._history_size = 8
@@ -127,11 +135,7 @@ class BpmDetector:
             return
 
         try:
-            percival = es.PercivalBpmEstimator(
-                frameSize=1024, frameSizeOSS=2048, hopSize=128, hopSizeOSS=256,
-                maxBPM=210, minBPM=50, sampleRate=self._sr,
-            )
-            bpm = float(percival(linear))
+            bpm = float(self._percival(linear))
             print(f'[bpm] percival raw={bpm:.1f}', flush=True)
             if bpm > 0:
                 meter = self._detect_meter(linear, bpm)
@@ -141,9 +145,7 @@ class BpmDetector:
             print(f'[bpm] percival error: {e}', flush=True)
 
         try:
-            danceability, _ = es.Danceability(
-                maxTau=8800, minTau=310, sampleRate=float(self._sr), tauMultiplier=1.1
-            )(linear)
+            danceability, _ = self._danceability(linear)
             if danceability is not None:
                 self._submit_danceability(min(1.0, float(danceability) / 3.0))
         except Exception:

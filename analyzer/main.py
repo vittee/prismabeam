@@ -1,6 +1,8 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ.setdefault('TF_NUM_INTEROP_THREADS', '2')
+os.environ.setdefault('TF_NUM_INTRAOP_THREADS', '2')
 
 import multiprocessing
 import socket
@@ -24,6 +26,8 @@ def ml_process(audio_q: multiprocessing.Queue, result_q: multiprocessing.Queue,
                embedding_model_path: str, genre_head_path: str, mood_head_path: str):
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    os.environ.setdefault('TF_NUM_INTEROP_THREADS', '2')
+    os.environ.setdefault('TF_NUM_INTRAOP_THREADS', '2')
     import essentia
     essentia.log.warningActive = False
     essentia.log.infoActive = False
@@ -42,8 +46,15 @@ def ml_process(audio_q: multiprocessing.Queue, result_q: multiprocessing.Queue,
         on_mood=on_mood,
     )
 
+    import queue as _queue
     while True:
         pcm = audio_q.get()
+        # drain any backlog so we always process the freshest audio
+        while True:
+            try:
+                pcm = audio_q.get_nowait()
+            except _queue.Empty:
+                break
         tagger.process(pcm)
 
 
