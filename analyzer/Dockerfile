@@ -34,7 +34,7 @@ COPY *.py ./
 ENV EMBEDDING_MODEL_PATH=/app/models/discogs_multi_embeddings-effnet-bs64-1.pb
 ENV GENRE_HEAD_PATH=/app/models/mtg_jamendo_genre-discogs_multi_embeddings-effnet-1.pb
 ENV MOOD_HEAD_PATH=/app/models/mtg_jamendo_moodtheme-discogs_multi_embeddings-effnet-1.pb
-ENV RHYTHM_PORT=7441
+ENV AUDIO_PORT=7441
 ENV ANALYSIS_PORT=7442
 ENV CUDA_VISIBLE_DEVICES=-1
 ENV TF_CPP_MIN_LOG_LEVEL=3

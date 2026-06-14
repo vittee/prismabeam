@@ -25,6 +25,12 @@ const usbDevices = [
 ];
 
 async function main() {
+  const analyzerHost = process.env.ANALYZER_HOST;
+  if (!analyzerHost) {
+    console.error('ANALYZER_HOST is required');
+    process.exit(1);
+  }
+
   const devices = await SerialPort.binding.list().then(all => {
     const matches = all.filter(({ vendorId, productId }) =>
       usbDevices.find(u => u.vendorId === vendorId && u.productId === productId)
@@ -63,7 +69,7 @@ async function main() {
 
   await dmx.open();
 
-  const analysis = new AnalysisClient(process.env.ANALYZER_HOST || '127.0.0.1', +(process.env.ANALYZER_PORT || 7442));
+  const analysis = new AnalysisClient(analyzerHost, +(process.env.ANALYZER_PORT || 7442));
   await new Promise<void>((resolve) => analysis.once('ready', resolve));
 
   const params = new ParamStore();

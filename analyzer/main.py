@@ -17,8 +17,8 @@ from tcp_server import TcpServer
 from bpm import BpmDetector
 from energy import EnergyDetector
 
-RHYTHM_PORT = int(os.environ.get('RHYTHM_PORT', 7441))
-TCP_PORT    = int(os.environ.get('ANALYSIS_PORT', 7442))
+AUDIO_PORT = int(os.environ.get('AUDIO_PORT', 7441))
+ANALYSIS_PORT    = int(os.environ.get('ANALYSIS_PORT', 7442))
 SAMPLE_RATE = 48000
 
 
@@ -83,7 +83,7 @@ def main():
         if last_mood_tags:
             tcp.send(conn, {'type': 'mood', 'tags': last_mood_tags})
 
-    tcp = TcpServer(TCP_PORT, on_connect=on_connect)
+    tcp = TcpServer(ANALYSIS_PORT, on_connect=on_connect)
     tcp.start()
 
     embedding_model_path = os.environ.get('EMBEDDING_MODEL_PATH', '/app/models/discogs_multi_embeddings-effnet-bs64-1.pb')
@@ -130,9 +130,9 @@ def main():
         except Exception:
             pass
 
-    threading.Thread(target=recv_udp, args=(RHYTHM_PORT, on_rhythm), daemon=True).start()
+    threading.Thread(target=recv_udp, args=(AUDIO_PORT, on_rhythm), daemon=True).start()
 
-    print(f'[analysis] rhythm:{RHYTHM_PORT} tcp:{TCP_PORT}', flush=True)
+    print(f'[analysis] rhythm:{AUDIO_PORT} tcp:{ANALYSIS_PORT}', flush=True)
     threading.Event().wait()
 
 
