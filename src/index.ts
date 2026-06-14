@@ -9,7 +9,7 @@ import { Fixture } from './fixtures/fixture';
 import { YUERGenericBeamSpot } from './fixtures/moving-head/yeur';
 import { Mini30WMovingHeadPrismGoboWithLaser } from './fixtures/moving-head/mini';
 import { TADAMK54Rgb } from './fixtures/par/tadamk54';
-import { AnalysisClient } from './analysis/analysis-client';
+import { ActivationTag, AnalysisClient } from './analysis/analysis-client';
 import { Animator } from './animator';
 import { ParamStore } from './params';
 import { createWsServer } from './server';
@@ -68,6 +68,8 @@ async function main() {
   let bpm = 120;
   let energy = 0.5;
   let danceability = 0.5;
+  let tags: ActivationTag[] = [];
+  let moods: ActivationTag[] = [];
 
   const animator = new Animator({
     movingHead: {
@@ -107,14 +109,18 @@ async function main() {
     next();
   });
 
-  analysis.on('extracted', (tags) => {
-    console.log('extracted', tags);
-    if (tags.length) animator.updateGenre(tags);
+  analysis.on('extracted', (activations) => {
+    tags = activations;
+    if (activations.length) {
+      animator.updateGenre(activations.map(tag => ({...tag, name: tag.name.toLowerCase() })));
+    }
   });
 
-  analysis.on('mood', (tags) => {
-    console.log('mood', tags);
-    if (tags.length) animator.updateMood(tags);
+  analysis.on('mood', (activations) => {
+    moods = activations;
+    if (activations.length) {
+      animator.updateMood(activations.map(tag => ({...tag, name: tag.name.toLowerCase() })));
+    }
   });
 
   analysis.on('bpm', (v) => {

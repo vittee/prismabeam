@@ -5,7 +5,7 @@ import { Fixture } from "./fixtures/fixture";
 import { easeInExpo, easeInOutSine } from "./utils/easing";
 import { ProfileConfigs } from "./profiles/configs";
 import { MiniVariant, Profile } from "./profiles/types";
-import { GenreTagToProfileMap, ProfileMoodOverrideMap, MOOD_OVERRIDE_THRESHOLD, MOOD_WILDCARD_THRESHOLD } from "./profiles/mapping";
+import { GenreMoodAliasMap, GenreBlendMap, MoodBlendMap, MoodStrobingBoost } from "./profiles/mapping";
 import { ParamStore } from "./params";
 
 export type AnimatorOptions = {
@@ -35,9 +35,8 @@ export class Animator {
   #profileName = '';
   #profile = ProfileConfigs['idle'];
 
-  #currentGenre = '';
-  #currentMood = '';
-  #currentMoodScore = 0;
+  #topGenres: [string, number][] = [];
+  #topMoods: [string, number][] = [];
   #variants: Profile['variants'] = {
     par: [],
     head: [],
@@ -488,15 +487,7 @@ export class Animator {
   }
 
   #updateStrobingMoodBoost(mood: string, score: number) {
-    const target = ({
-      energetic: 1.5, action: 1.5, fast: 1.5, sport: 1.5,
-      powerful: 1.3, epic: 1.3,
-      dramatic: 1.2, heavy: 1.2,
-      upbeat: 1.1, uplifting: 1.1,
-      sad: 0.7, melancholic: 0.7, emotional: 0.7,
-      calm: 0.5, relaxing: 0.5, soft: 0.5, slow: 0.5,
-      meditative: 0.4, dream: 0.4, deep: 0.4, space: 0.4,
-    } as Record<string, number>)[mood] ?? 1.0;
+    const target = MoodStrobingBoost[mood] ?? 1.0;
 
     // blend toward target weighted by mood score, slow EMA (~8s decay)
     const alpha = 0.05 * score;
@@ -527,56 +518,66 @@ export class Animator {
   }
 
   updateGenre(tags: ActivationTag[]) {
-    // weighted vote: each tag votes for its mapped profile weighted by score
-    const votes = new Map<string, number>();
-    for (const tag of tags) {
-      const profile = GenreTagToProfileMap[toLower(tag.name)];
-      if (profile) votes.set(profile, (votes.get(profile) ?? 0) + tag.score);
-    }
-    if (!votes.size) return;
-    const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    console.log('[genre]', [...votes.entries()].map(([p, s]) => `${p}:${s.toFixed(2)}`).join(' '));
-    this.#currentGenre = best;
+    if (!tags.length) return;
+    this.#topGenres = tags.slice(0, 2).map(t => [t.name, t.score]);
     this.#resolveProfile();
   }
 
   updateMood(tags: ActivationTag[]) {
-    const votes = new Map<string, number>();
+    if (!tags.length) return;
+    this.#topMoods = tags.slice(0, 2).map(t => [t.name, t.score]);
+
     for (const tag of tags) {
-      const name = toLower(tag.name);
-      votes.set(name, (votes.get(name) ?? 0) + tag.score);
+      this.#updateStrobingMoodBoost(tag.name, tag.score);
     }
-    if (!votes.size) return;
-    const sorted = [...votes.entries()].sort((a, b) => b[1] - a[1]);
-    const [bestMood, bestScore] = sorted[0];
-    console.log('[mood]', sorted.map(([m, s]) => `${m}:${s.toFixed(2)}`).join(' '));
-    this.#currentMood = bestMood;
-    this.#currentMoodScore = bestScore;
-    // modulate strobing for all top moods, weighted by score
-    for (const [mood, score] of sorted) {
-      this.#updateStrobingMoodBoost(mood, score);
-    }
+
     this.#resolveProfile();
   }
 
   #resolveProfile() {
-    const base = this.#currentGenre;
-    const mood = this.#currentMood;
-    const score = this.#currentMoodScore;
+    const genres = this.#topGenres;
+    const moods = this.#topMoods;
 
-    let resolved = base || 'default';
+    const [genre1 = '', genre2 = ''] = genres.map(([n]) => n);
+    const [mood1 = '', mood2 = ''] = moods.map(([n]) => n);
 
-    if (mood && score >= MOOD_OVERRIDE_THRESHOLD) {
-      const specific = ProfileMoodOverrideMap[`${resolved}+${mood}`];
-      if (specific) {
-        resolved = specific;
-      } else if (score >= MOOD_WILDCARD_THRESHOLD) {
-        const wildcard = ProfileMoodOverrideMap[`*+${mood}`];
-        if (wildcard) resolved = wildcard;
-      }
+    // blend top-2 genres into a final genre
+    const blendedGenre = genre2
+      ? (GenreBlendMap[`${genre1}+${genre2}`] ?? GenreBlendMap[`${genre2}+${genre1}`] ?? genre1)
+      : genre1;
+
+    // blend top-2 moods into a final mood
+    const blendedMood = (mood1 && mood2)
+      ? (MoodBlendMap[`${mood1}+${mood2}`] ?? MoodBlendMap[`${mood2}+${mood1}`] ?? mood1)
+      : mood1;
+
+    // resolve: blended genre+mood → alias → ProfileConfigs
+    const tryProfile = (genre: string, mood: string): string | undefined => {
+      if (!genre || !mood) return undefined;
+      const key = `${genre}+${mood}`;
+      const canonical = GenreMoodAliasMap[key] ?? key;
+      return ProfileConfigs[canonical] ? canonical : undefined;
+    };
+
+    if (mood1) {
+      const hit = tryProfile(blendedGenre, blendedMood)
+        ?? tryProfile(genre1, blendedMood)
+        ?? tryProfile(blendedGenre, mood1)
+        ?? tryProfile(genre1, mood1);
+
+      if (hit) { this.#setProfile(hit); return; }
+
+      // wildcard *+mood
+      const wkey = `*+${blendedMood}`;
+      const wcanonical = GenreMoodAliasMap[wkey] ?? wkey;
+      if (ProfileConfigs[wcanonical]) { this.#setProfile(wcanonical); return; }
     }
 
-    this.#setProfile(resolved);
+    this.#setProfile(blendedGenre || genre1 || 'default');
+  }
+
+  getProfileName() {
+    return this.#profileName;
   }
 
   #setProfile(profileName: string) {
@@ -585,7 +586,6 @@ export class Animator {
     const profile = ProfileConfigs[profileName] ?? ProfileConfigs['default'];
     if (!profile || profile === this.#profile) return;
 
-    console.log('[profile]', profileName);
     this.#profileName = profileName;
     this.#applyProfile(profile);
   }
