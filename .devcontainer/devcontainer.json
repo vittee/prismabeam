@@ -6,8 +6,8 @@
   "runArgs": [
     "--privileged",
     "--device=/dev/ttyUSB0:/dev/ttyUSB0",
-    "--publish=7440:7440/udp",
-    "--publish=7441:7441/udp"
+    "--publish=7441:7441/udp",
+    "--publish=7442:7442"
   ],
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
