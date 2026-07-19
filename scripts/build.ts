@@ -9,6 +9,7 @@ const root = join(__dirname, '..');
 const dist = join(root, 'dist');
 
 if (existsSync(dist)) {
+  console.log('Cleaning...');
   rmSync(dist, { recursive: true });
 }
 
