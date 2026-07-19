@@ -106,7 +106,12 @@ export function createWsServer(httpServer: http.Server, params: ParamStore) {
       socket.send(JSON.stringify({ type: 'snapshot', snapshot: snapshot() } satisfies SnapshotMessage));
 
       socket
+        .on('pong', () => lastPinged.delete(socket))
         .on('close', () => {
+          sockets.delete(socket);
+        })
+        .on('error', () => {
+          socket.terminate();
           sockets.delete(socket);
         })
         .on('message', (raw) => {
@@ -137,6 +142,28 @@ export function createWsServer(httpServer: http.Server, params: ParamStore) {
         });
     });
   });
+
+  // Evict half-open TCP connections that never emit 'close'
+  const lastPinged = new Map<WebSocket, number>();
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const client of sockets) {
+      const pingedAt = lastPinged.get(client);
+      if (pingedAt !== undefined && now - pingedAt < 30_000) {
+        continue;
+      }
+      if (pingedAt !== undefined) {
+        // pinged 30s ago, no pong received — dead
+        client.terminate();
+        sockets.delete(client);
+        lastPinged.delete(client);
+        continue;
+      }
+      lastPinged.set(client, now);
+      client.ping();
+    }
+  }, 1_000);
 
   const broadcast = (data: BroadcastMessage) => {
     const msg = JSON.stringify(data);
