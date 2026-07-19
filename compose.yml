@@ -5,3 +5,8 @@ services:
   prismabeam:
     image: prismabeam
     build: .
+    depends_on:
+      analyzer:
+        condition: service_healthy
+    environment:
+      ANALYZER_HOST: analyzer
