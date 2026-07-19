@@ -1,10 +1,10 @@
 ﻿<script lang="ts">
   import { onMount } from "svelte";
+  import type { ActivationTag, BroadcastMessage, Snapshot } from 'prismabeam';
   import Fader from "./components/Fader.svelte";
   import Knob from "./components/Knob.svelte";
   import MiniChart from "./components/MiniChart.svelte";
   import ToggleButton from "./components/ToggleButton.svelte";
-  import type { ActivationTag, BroadcastMessage, Snapshot } from 'prismabeam';
   import TagsChart from "./components/TagsChart.svelte";
 
 
