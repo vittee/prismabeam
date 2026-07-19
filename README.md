@@ -97,7 +97,7 @@ Three TensorFlow protobuf models are downloaded at Docker build time:
 Build both Docker images:
 
 ```bash
-pnpm docker
+docker compose build
 ```
 
 This produce 2 docker images:
@@ -108,24 +108,16 @@ This produce 2 docker images:
 
 ## Running
 
-A `compose.yml` is included. Create a `compose.override.yml` to add ports and the USB device:
-
-```yaml
-services:
-  analyzer:
-    ports:
-      - "7441:7441/udp"
-      - "7442:7442"
-
-  prismabeam:
-    ports:
-      - "7400:7400"
-    devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-```
+A `compose.yml` is included with ports already exposed. On Linux, pass through the USB-DMX adapter:
 
 ```bash
 docker compose up
+```
+
+On Linux, if your adapter is not `/dev/ttyUSB0`, override the device path:
+
+```bash
+docker compose run --device /dev/ttyUSB1:/dev/ttyUSB0 prismabeam
 ```
 
 ### Feed audio

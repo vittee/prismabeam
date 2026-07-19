@@ -2,6 +2,8 @@ services:
   analyzer:
     image: prismabeam-analyzer
     build: ./analyzer
+    ports:
+      - 7441:7441/udp
   prismabeam:
     image: prismabeam
     build: .
@@ -10,3 +12,5 @@ services:
         condition: service_healthy
     environment:
       ANALYZER_HOST: analyzer
+    ports:
+      - 7400:7400
