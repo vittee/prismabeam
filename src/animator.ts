@@ -1,4 +1,4 @@
-import { clamp, random, sample, shuffle, toLower } from "lodash";
+import { clamp, random, sample, shuffle } from "lodash";
 import { ActivationTag } from "./analysis/analysis-client";
 import { Animation } from "./fixtures/animation";
 import { Fixture } from "./fixtures/fixture";
@@ -33,15 +33,20 @@ export class Animator {
   #lastStrobingCheck = 0;
 
   #profileName = '';
+  #pendingProfileName = '';
   #profile = ProfileConfigs['idle'];
 
   #topGenres: [string, number][] = [];
   #topMoods: [string, number][] = [];
+
   #variants: Profile['variants'] = {
     par: [],
     head: [],
     mini: []
   }
+
+  #parTimer?: NodeJS.Timeout;
+  #headTimer?: NodeJS.Timeout;
 
   #lumiousAnim: Record<'main' | 'mini' | 'par', Animation>;
   #flashAnim: Record<'main' | 'mini' | 'par', Animation>;
@@ -197,6 +202,8 @@ export class Animator {
   }
 
   #updateParVariant() {
+    clearTimeout(this.#parTimer);
+
     const variant = this.#variants.par.shift();
 
     if (!variant) {
@@ -218,11 +225,11 @@ export class Animator {
       const duration = bars * this.#barInterval;
 
       if (Date.now() >= (since + duration)) {
-        setTimeout(() => this.#updateParVariant());
+        this.#parTimer = setTimeout(() => this.#updateParVariant());
         return;
       }
 
-      setTimeout(move);
+      this.#parTimer = setTimeout(move);
     }
 
     const move = () => {
@@ -251,6 +258,8 @@ export class Animator {
   }
 
   #updateHeadVariant() {
+    clearTimeout(this.#headTimer);
+
     const variant = this.#variants.head.shift();
 
     if (!variant) {
@@ -282,11 +291,12 @@ export class Animator {
       const duration = bars * this.#barInterval;
 
       if (Date.now() >= (since + duration)) {
-        setTimeout(() => this.#updateHeadVariant());
+        this.#flushPendingProfile();
+        this.#headTimer = setTimeout(() => this.#updateHeadVariant());
         return;
       }
 
-      setTimeout(move);
+      this.#headTimer = setTimeout(move);
     }
 
     // Move head into position
@@ -328,7 +338,15 @@ export class Animator {
       }
 
       if (miniVariant) {
-        for (const { axis, duration, easing } of miniVariant.moves) {
+        const miniMoves = miniVariant.moves;
+
+        // For starfield variants, mirror the waypoints so the loop retraces instead of jumping
+        // A→B→C→B→A loops seamlessly back to A without an abrupt position jump
+        const loopMoves = miniVariant.starfield && miniMoves.length > 1
+          ? [...miniMoves, ...miniMoves.slice(1, -1).reverse()]
+          : miniMoves;
+
+        for (const { axis, duration, easing } of loopMoves) {
           const [pan, tilt] = [[axis[0], 540], [axis[1], 180]].map(([deg, max]) => deg / max);
           const stepDuration = this.#quantizeDuration(duration * (1 - this.#pace) * (1 - this.#energy));
           const easingFn = this.#moveEasing(easing);
@@ -473,14 +491,16 @@ export class Animator {
   }
 
   #detectStrobing() {
-    const { paceWeight = 0.3, energyWeight = 0.7, danceExp = 1.0, threshold = 0.2 } = this.#profile.strobing ?? {};
+    const { paceWeight = 0.3, energyWeight = 0.7, danceExp = 2.0, threshold = 0.25 } = this.#profile.strobing ?? {};
 
-    const pace = clamp((this.#bpm - 95) / (150 - 95), 0, 1) * 0.5 + 0.5; // 95bpm=0.5, 150bpm=1.0
-    const energy2 = this.#bpm >= 105 ? this.#energy ** 3 : this.#energy * pace;
-    const weight = (paceWeight * pace + energyWeight * energy2) * this.#dance ** danceExp * this.#strobingMoodBoost;
+    const pace = clamp((this.#bpm - 105) / (150 - 105), 0, 1) * 0.5 + 0.5; // 105bpm=0.5, 150bpm=1.0
+    const energy2 = this.#bpm >= 110 ? this.#energy ** 3 : this.#energy * pace;
+    // enforce minimum danceExp of 1.5 so low-dance songs always suppress strobing hard
+    const effectiveDanceExp = Math.max(danceExp, 1.5);
+    const weight = (paceWeight * pace + energyWeight * energy2) * this.#dance ** effectiveDanceExp * this.#strobingMoodBoost;
 
     // Fast attack on spikes, ~1-bar (4-beat) decay
-    const alpha = weight > this.#strobingWeight ? Math.min(1, weight * 2) : 0.75;
+    const alpha = weight > this.#strobingWeight ? Math.min(1, weight * 2) : 0.6;
     this.#strobingWeight = alpha * weight + (1 - alpha) * this.#strobingWeight;
 
     this.#strobing = this.#strobingWeight >= threshold;
@@ -570,7 +590,11 @@ export class Animator {
       // wildcard *+mood
       const wkey = `*+${blendedMood}`;
       const wcanonical = GenreMoodAliasMap[wkey] ?? wkey;
-      if (ProfileConfigs[wcanonical]) { this.#setProfile(wcanonical); return; }
+
+      if (ProfileConfigs[wcanonical]) {
+        this.#setProfile(wcanonical);
+        return;
+      }
     }
 
     this.#setProfile(blendedGenre || genre1 || 'default');
@@ -581,12 +605,29 @@ export class Animator {
   }
 
   #setProfile(profileName: string) {
-    if (profileName === this.#profileName) return;
+    if (profileName === this.#profileName || profileName === this.#pendingProfileName) return;
 
     const profile = ProfileConfigs[profileName] ?? ProfileConfigs['default'];
+    if (!profile) return;
+
+    if (!this.#profileName) {
+      this.#profileName = profileName;
+      this.#applyProfile(profile);
+      return;
+    }
+
+    this.#pendingProfileName = profileName;
+  }
+
+  #flushPendingProfile() {
+    const profileName = this.#pendingProfileName;
+    if (!profileName || profileName === this.#profileName) return;
+
+    const profile = ProfileConfigs[profileName];
     if (!profile || profile === this.#profile) return;
 
     this.#profileName = profileName;
+    this.#pendingProfileName = '';
     this.#applyProfile(profile);
   }
 
