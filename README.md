@@ -183,6 +183,18 @@ ffmpeg -re -i file.mp3 \
 
 ## Physical Setup
 
+### DMX addresses
+
+Fixtures are auto-assigned sequentially from address 1 in the order they appear in `src/index.ts`:
+
+| Fixture | Start address | Channels |
+|---|---|---|
+| YUER Generic Beam Spot (main head) | 1 | 13 |
+| Mini 30W Moving Head Prism Gobo With Laser | 14 | 12 |
+| TADA MK54 RGBW PAR | 26 | 7 |
+
+Set each fixture's DMX start address on its hardware dipswitch accordingly.
+
 ### Room layout
 
 Place both moving heads at the front of the room, flanking the TV or screen.
