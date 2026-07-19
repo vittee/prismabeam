@@ -39,8 +39,7 @@ UDP:7441 (48 kHz FloatLE stereo)
     │
     ├─► BpmDetector
     │       PercivalBpmEstimator (8 s window, 2 s hop, 48 000 Hz)
-    │       Danceability (Essentia, normalised 0–1)
-    │       Meter correction + BPM fold into 90–160 sweet spot
+    │       Danceability (Essentia, normalised 0–1, 2-sample median)
     │
     └─► ML subprocess  (Python multiprocessing)
             Resample 48 kHz → 16 kHz (Essentia)
@@ -56,7 +55,8 @@ Animator (Node.js)
     ├─ Head move animation   (easeInExpo or easeInOutSine by danceability)
     ├─ Luminous animation    (200 ms fade, modulated by energy)
     ├─ Flash animation       (triggered on every kick event)
-    └─ Strobe animation      (auto-activated: pace × energy × danceability weight,
+    └─ Strobe animation      (auto-activated: pace × energy × danceability² weight,
+                               strongly suppressed for low-danceability songs,
                                MoodStrobingBoost per active mood)
 
 DMX transport
@@ -108,26 +108,20 @@ This produce 2 docker images:
 
 ## Running
 
-Create a `compose.yml` and start both services:
+A `compose.yml` is included. Create a `compose.override.yml` to add ports and the USB device:
 
 ```yaml
 services:
   analyzer:
-    image: prismabeam-analyzer
     ports:
       - "7441:7441/udp"
-      - "7442:7442/tcp"
+      - "7442:7442"
 
   prismabeam:
-    image: prismabeam
     ports:
-      - "7400:7400/tcp"
+      - "7400:7400"
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
-    environment:
-      ANALYZER_HOST: analyzer
-    depends_on:
-      - analyzer
 ```
 
 ```bash
