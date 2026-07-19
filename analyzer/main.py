@@ -18,7 +18,7 @@ from bpm import BpmDetector
 from energy import EnergyDetector
 
 AUDIO_PORT = int(os.environ.get('AUDIO_PORT', 7441))
-ANALYSIS_PORT    = int(os.environ.get('ANALYSIS_PORT', 7442))
+ANALYSIS_PORT = int(os.environ.get('ANALYSIS_PORT', 7442))
 SAMPLE_RATE = 48000
 
 
