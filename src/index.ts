@@ -48,7 +48,7 @@ async function main() {
   const device = devices.at(0);
   if (!device) {
     console.error('No USB-DMX device found');
-    return;
+    process.exit(1);
   }
 
   console.log('Found device:', device.path);
