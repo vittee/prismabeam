@@ -10,37 +10,6 @@ def _median(values: list[float]) -> float:
     return s[mid] if n % 2 else (s[mid - 1] + s[mid]) * 0.5
 
 
-def _fold_bpm(bpm: float, ref: float, mn: float = 40, mx: float = 220) -> float:
-    ratios = [0.5, 2.0, 1 / 3, 3.0]
-    SWEET_MIN, SWEET_MAX, CENTRE = 90, 160, 120
-
-    if ref <= 0:
-        if bpm < SWEET_MIN or bpm > SWEET_MAX:
-            best, best_dist = bpm, abs(bpm - CENTRE)
-            for r in ratios:
-                c = bpm * r
-                if c < mn or c > mx or c < SWEET_MIN or c > SWEET_MAX:
-                    continue
-                d = abs(c - CENTRE)
-                if d <= best_dist:
-                    best_dist, best = d, c
-            return best
-        return bpm
-
-    raw_dist = abs(bpm - ref) / ref
-    if raw_dist < 0.15:
-        return bpm
-
-    best, best_rel = bpm, raw_dist
-    for r in ratios:
-        c = bpm * r
-        if c < mn or c > mx:
-            continue
-        rel = abs(c - ref) / ref
-        if rel < best_rel * 0.5:
-            best_rel, best = rel, c
-    return best
-
 
 # ---------------------------------------------------------------------------
 # BpmDetector  (Percival + danceability, matches percival.js behaviour)
@@ -68,10 +37,6 @@ class BpmDetector:
         self._buf_filled = False
         self._samples_since_hop = 0
 
-        self._percival = es.PercivalBpmEstimator(
-            frameSize=1024, frameSizeOSS=2048, hopSize=128, hopSizeOSS=256,
-            maxBPM=210, minBPM=50, sampleRate=self._sr,
-        )
         self._danceability = es.Danceability(
             maxTau=8800, minTau=310, sampleRate=float(self._sr), tauMultiplier=1.1
         )
@@ -82,7 +47,7 @@ class BpmDetector:
         self._last_detected = 0.0
         self._consecutive_outliers = 0
         self._dance_history: list[float] = []
-        self._dance_history_size = 4
+        self._dance_history_size = 2
 
     def process(self, pcm: np.ndarray):
         with self._lock:
@@ -135,11 +100,13 @@ class BpmDetector:
             return
 
         try:
-            bpm = float(self._percival(linear))
+            percival = es.PercivalBpmEstimator(
+                frameSize=1024, frameSizeOSS=2048, hopSize=128, hopSizeOSS=256,
+                maxBPM=210, minBPM=50, sampleRate=self._sr,
+            )
+            bpm = float(percival(linear))
             print(f'[bpm] percival raw={bpm:.1f}', flush=True)
             if bpm > 0:
-                meter = self._detect_meter(linear, bpm)
-                bpm = self._correct_meter(bpm, meter)
                 self._submit_bpm(bpm)
         except Exception as e:
             print(f'[bpm] percival error: {e}', flush=True)
@@ -194,12 +161,7 @@ class BpmDetector:
         if not np.isfinite(raw) or raw < 55 or raw > 240:
             return
         bpm = raw
-        hist_ref = _median(self._history) if len(self._history) >= 4 else 0.0
-        prev = self._last_detected
-        directly_consistent = prev <= 0 or abs(bpm - prev) / prev < 0.2
-        ref = hist_ref if (directly_consistent and hist_ref > 0) else (prev if prev > 0 else 0.0)
         self._last_detected = bpm
-        bpm = _fold_bpm(bpm, ref)
 
         hist_ref2 = _median(self._history) if len(self._history) >= 4 else 0.0
         is_outlier = (hist_ref2 > 0
