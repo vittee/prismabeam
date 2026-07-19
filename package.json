@@ -8,7 +8,7 @@
     "postinstall": "node scripts/postinstall.mjs",
     "docker": "docker compose -f compose-build.yml build"
   },
-  "packageManager": "pnpm@10.34.1",
+  "packageManager": "pnpm@11.9.0",
   "dependencies": {
     "@serialport/bindings-cpp": "^13.0.1",
     "express": "^5.2.1",
