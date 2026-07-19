@@ -128,6 +128,48 @@ services:
 docker compose up
 ```
 
+### Feed audio
+
+The analyzer expects a continuous UDP stream of 48 kHz stereo float32-LE PCM on port 7441.
+Use ffmpeg to send audio from any source:
+
+**Single file** — plays at real-time speed (`-re`), loops with `-stream_loop -1`:
+
+```bash
+ffmpeg -re -stream_loop -1 -i file.mp3 \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
+```
+
+**System audio / loopback** (macOS, using BlackHole or Soundflower as loopback device):
+
+```bash
+ffmpeg -f avfoundation -i ":BlackHole 2ch" \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
+```
+
+**System audio / loopback** (Linux ALSA loopback or PulseAudio monitor):
+
+```bash
+ffmpeg -f pulse -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
+```
+
+**System audio / loopback** (Windows WASAPI loopback):
+
+```bash
+ffmpeg -f dshow -i audio="Stereo Mix (Realtek Audio)" \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
+```
+
+To list available audio devices on Windows: `ffmpeg -list_devices true -f dshow -i dummy`
+
+**Network stream** (e.g. internet radio, RTSP, HLS):
+
+```bash
+ffmpeg -i http://stream.example.com/radio.mp3 \
+  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
+```
+
 ### USB-DMX adapter on Windows
 
 Docker Desktop on Windows cannot pass through USB devices directly. Use
@@ -165,13 +207,6 @@ Alternatively, open WSL Dashboard → **USB Devices** tab, find the FTDI adapter
 | `PORT` | `7400` | HTTP port for the web UI |
 | `ANALYZER_HOST` | *(required)* | Analyzer container hostname |
 | `ANALYZER_PORT` | `7442` | Analyzer TCP port |
-
-### Feed audio
-
-```bash
-ffmpeg -re -i file.mp3 \
-  -f f32le -ac 2 -ar 48000 udp://127.0.0.1:7441
-```
 
 ---
 
