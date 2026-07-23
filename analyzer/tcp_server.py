@@ -59,17 +59,8 @@ class TcpServer:
         frame = len(data).to_bytes(4, 'big') + data
         with self._lock:
             clients = list(self._clients)
-        dead = []
         for conn in clients:
             try:
                 conn.sendall(frame)
             except OSError:
-                dead.append(conn)
-        if dead:
-            with self._lock:
-                for conn in dead:
-                    self._clients.remove(conn)
-                    try:
-                        conn.close()
-                    except OSError:
-                        pass
+                pass
