@@ -2,6 +2,7 @@ services:
   analyzer:
     image: prismabeam-analyzer
     build: ./analyzer
+    restart: always
     ports:
       - 7441:7441/udp
     healthcheck:
@@ -13,6 +14,7 @@ services:
   prismabeam:
     image: prismabeam
     build: .
+    restart: always
     depends_on:
       analyzer:
         condition: service_healthy
