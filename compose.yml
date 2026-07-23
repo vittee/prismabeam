@@ -4,6 +4,12 @@ services:
     build: ./analyzer
     ports:
       - 7441:7441/udp
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; socket.create_connection(('127.0.0.1', 7442), 2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
   prismabeam:
     image: prismabeam
     build: .
